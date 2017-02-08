@@ -152,7 +152,7 @@ int main(){
 	Rect ROAD(1,219,1279,327);
 	//video capture object
 	VideoCapture capture;
-	capture.open("\\\\Mac\\Home\\Desktop\\60m.mp4");
+	capture.open("\\\\Mac\\Home\\Desktop\\DroneVideos\\60m.mp4");
 	double fps = capture.get(CV_CAP_PROP_FPS);
 	if(!capture.isOpened())
 	{
