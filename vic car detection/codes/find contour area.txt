@@ -1,0 +1,111 @@
+#include "stdafx.h"
+#include <cv.h>
+#include <highgui.h>
+#include "opencv2/highgui/highgui.hpp"
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+double contourAreaValue(cv::Mat image);
+
+int main()
+{
+
+ IplImage* img =  cvLoadImage("E:\\Visual Studio Projects\\OpenCVProject\\orig.png");
+ 
+  
+ //show the original image
+ cvNamedWindow("Original");
+ cvShowImage("Original",img);
+
+ //smooth the original image using Gaussian kernel to remove noise
+cvSmooth(img, img, CV_GAUSSIAN,3,3);
+
+ //converting the original image into grayscale
+ IplImage* imgGrayScale = cvCreateImage(cvGetSize(img), 8, 1); 
+ cvCvtColor(img,imgGrayScale,CV_BGR2GRAY);
+
+ cv::Mat image(imgGrayScale);
+
+ cv::Rect myROI1(0,40,125,135);
+ cv::Rect myROI2(150,23,149,144);
+ cv::Rect myROI3(325,17,152,144);
+ cv::Rect myROI4(2,204,133,130);
+ cv::Rect myROI5(155,200,147,139);
+ cv::Rect myROI6(329,199,149,135);
+ cv::Rect myROI7(12,362,137,117);
+ cv::Rect myROI8(162,367,144,111);
+ cv::Rect myROI9(331,365,138,112);
+ 
+ cv::Mat croppedImage1 = image(myROI1);
+ cv::Mat croppedImage2 = image(myROI2);
+ cv::Mat croppedImage3 = image(myROI3);
+ cv::Mat croppedImage4 = image(myROI4);
+ cv::Mat croppedImage5 = image(myROI5);
+ cv::Mat croppedImage6 = image(myROI6);
+ cv::Mat croppedImage7 = image(myROI7);
+ cv::Mat croppedImage8 = image(myROI8);
+ cv::Mat croppedImage9 = image(myROI9);
+
+ //thresholding the grayscale image to get better results
+ //cvThreshold(imgGrayScale,imgGrayScale,100,255,CV_THRESH_BINARY_INV);
+ 
+ //threshold(croppedImage1,croppedImage1,105,255,CV_THRESH_BINARY_INV);
+ adaptiveThreshold(croppedImage1,croppedImage1,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV,39,2);
+ adaptiveThreshold(croppedImage2,croppedImage2,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV,39,2);
+ adaptiveThreshold(croppedImage3,croppedImage3,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV,39,2);
+ adaptiveThreshold(croppedImage4,croppedImage4,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV,39,2);
+ adaptiveThreshold(croppedImage5,croppedImage5,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV,39,2);
+ adaptiveThreshold(croppedImage6,croppedImage6,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV,39,2);
+ adaptiveThreshold(croppedImage7,croppedImage7,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV,39,2);
+ adaptiveThreshold(croppedImage8,croppedImage8,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV,39,2);
+ adaptiveThreshold(croppedImage9,croppedImage9,255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV,39,2);
+
+ printf("\nvalue 1 = %lf",contourAreaValue(croppedImage1));
+ printf("\nvalue 2 = %lf",contourAreaValue(croppedImage2));
+ printf("\nvalue 3 = %lf",contourAreaValue(croppedImage3));
+ printf("\nvalue 4 = %lf",contourAreaValue(croppedImage4));
+ printf("\nvalue 5 = %lf",contourAreaValue(croppedImage5));
+ printf("\nvalue 6 = %lf",contourAreaValue(croppedImage6));
+ printf("\nvalue 7 = %lf",contourAreaValue(croppedImage7));
+ printf("\nvalue 8 = %lf",contourAreaValue(croppedImage8));
+ printf("\nvalue 9 = %lf",contourAreaValue(croppedImage9));
+
+ cvNamedWindow("Thresholded Image");
+ cvShowImage("Thresholded Image",imgGrayScale);
+
+ cvWaitKey(0); //wait for a key press
+
+ //cleaning up
+ cvDestroyAllWindows(); 
+ cvReleaseImage(&img);
+ cvReleaseImage(&imgGrayScale);
+
+ return 0;
+}
+
+double contourAreaValue(cv::Mat image)
+{
+ CvSeq* contours;  //hold the pointer to a contour in the memory block
+ CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
+
+ IplImage *top1 = cvCloneImage(&(IplImage)image);
+ cvFindContours(top1, storage, &contours, sizeof(CvContour), CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(75,60));
+
+ double areaValue = 0;
+
+ while(contours)
+ {
+     //obtain a sequence of points of contour, pointed by the variable 'contour'
+     //result = cvApproxPoly(contours, sizeof(CvContour), storage, CV_POLY_APPROX_DP, cvContourPerimeter(contours)*0.02, 0);
+	 if(cvContourArea(contours,CV_WHOLE_SEQ, 0) > 100)
+	 {
+	 areaValue = areaValue + cvContourArea(contours,CV_WHOLE_SEQ, 0);
+	 }
+	 contours = contours->h_next; 
+ }
+
+  cvReleaseMemStorage(&storage);
+  return areaValue;
+
+}

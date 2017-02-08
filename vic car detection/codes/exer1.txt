@@ -1,0 +1,360 @@
+// Exer1.cpp : Defines the entry point for the console application.
+//320x240
+//640x480
+#include "stdafx.h"
+#include "cv.h"
+#include "highgui.h"
+#include "conio.h"
+#include <stdio.h>
+
+int countObjects(IplImage * binaryImage);
+void Evaluate(unsigned char P0,unsigned char P1, int *objects, int NumLabel);
+
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+	
+	IplImage * inputImage, *greyImage , *smallImage, *binaryImage, *newImage, *contrastImage;
+	int row, column, address, column_big,row_big,address_big;
+	int adr_grey, value, avg;
+	unsigned char *data;
+
+	//load image
+
+	inputImage = cvLoadImage("E:\\Visual Studio Projects\\Exer1\\geo.png",1);
+
+	greyImage  = cvCreateImage(cvSize(inputImage->width,inputImage->height),IPL_DEPTH_8U,1);
+
+	smallImage = cvCreateImage(cvSize(inputImage->width/2,inputImage->height/2),IPL_DEPTH_8U,inputImage->nChannels);
+
+	contrastImage = cvCreateImage(cvSize(inputImage->width,inputImage->height),IPL_DEPTH_8U,inputImage->nChannels);
+	
+	binaryImage  = cvCreateImage(cvSize(inputImage->width,inputImage->height),IPL_DEPTH_8U,1);
+
+	newImage  = cvCreateImage(cvSize(inputImage->width,inputImage->height),IPL_DEPTH_8U,1);
+	
+
+	int *frequency2 = (int*)calloc(256,sizeof(int));
+	int *frequency3 = (int*)calloc(256,sizeof(int));
+	int *frequency4 = (int*)calloc(256,sizeof(int));
+
+	//Convert to Small
+
+	unsigned char* iData = (unsigned char*)inputImage->imageData;
+	for(row=0 ; row<smallImage->height; row++)
+	{
+		for(column=0 ; column<smallImage->width; column++)
+		{
+			row_big = 2 * row;
+			column_big = 2 * column;
+			address_big = (inputImage->width*row_big) + column_big;
+			address = (smallImage->width*row) + column;
+			
+			smallImage->imageData[(address*3)] = iData[(address_big*3)];
+			smallImage->imageData[(address*3)+1] = iData[(address_big*3)+1];
+			smallImage->imageData[(address*3)+2] = iData[(address_big*3)+2];
+			
+
+
+
+		}
+	}
+
+	//Convert to Gray
+	for(row=0 ; row<inputImage->height; row++)
+	{
+		for(column=0 ; column<inputImage->width; column++)
+		{
+			address = (inputImage->width*row) + column;
+			//address = (smallImage->width*row) + column;
+			//adr_grey = (inputImage->width*row) + column;
+
+			value = inputImage->imageData[(address*3)]+inputImage->imageData[(address*3)+1]+inputImage->imageData[(address*3)+2];
+			avg = value/3;
+			greyImage->imageData[address]= value;
+			
+		}
+	}
+	
+	//Convert to Gray - HD
+	data = (unsigned char*)inputImage->imageData;
+	int *frequency = (int*)calloc(256,sizeof(int));
+	FILE *f;
+	for(row=0 ; row<inputImage->height; row++)
+	{
+		for(column=0 ; column<inputImage->width; column++)
+		{
+			address = (inputImage->width*row) + column;
+
+			value = data[(address*3)]+data[(address*3)+1]+data[(address*3)+2];
+			avg = value/3;
+			greyImage->imageData[address]= avg;
+			
+			//Generate frequency values
+			frequency[avg]++;
+			frequency2[iData[(address*3)]]++;
+			frequency3[iData[(address*3)+1]]++;
+			frequency4[iData[(address*3)+2]]++;
+		}
+	}
+
+	//Save Graph Frequency (EXECL)
+	f = fopen("frequency.txt","w");
+	for(int i=0;i<256;i++)
+	{
+		fprintf(f,"%d,%d\n",i,frequency[i]);
+	}  
+
+	fclose(f);
+
+	//histogram equalization
+	int cdf[256];
+	int cdf2[256];
+	int cdf3[256];
+	int cdf4[256];
+	
+	int h[256];
+	int h2[256];
+	int h3[256];
+	int h4[256];
+
+	
+	
+	for(int j = 0; j<=255; j++)
+	{
+		if(j == 0) cdf[j] = frequency[j];
+		else
+		{
+			cdf[j] = frequency[j] +cdf[j-1];
+		}
+		//RED cdf
+		if(j == 0) cdf2[j] = frequency2[j];
+		else
+		{
+			cdf2[j] = frequency2[j] +cdf2[j-1];
+		}
+		//GREEN cdf
+		if(j == 0) cdf3[j] = frequency3[j];
+		else
+		{
+			cdf3[j] = frequency3[j] +cdf3[j-1];
+		}
+		//BLUE cdf
+		if(j == 0) cdf4[j] = frequency4[j];
+		else
+		{
+			cdf4[j] = frequency4[j] +cdf4[j-1];
+		}
+	
+	}
+	f = fopen("cdf.txt","w");
+	for(int i=0;i<256;i++)
+	{
+		fprintf(f,"%d,%d\n",i,cdf[i]);
+	}  
+
+	fclose(f);
+	
+	//pagkuha sa H
+	for(int i=0;i<256;i++)
+	{
+		h[i] = (cdf[i]*255)/(640*480);
+		h2[i] = (cdf2[i]*255)/(640*480);
+		h3[i] = (cdf3[i]*255)/(640*480);
+		h4[i] = (cdf4[i]*255)/(640*480);
+	}  
+
+	//Adjust Contrast 
+	unsigned char *ndata = (unsigned char*)greyImage->imageData;
+	for(row=0;row<newImage->height; row++)
+	{	
+		for(column=0 ; column<newImage->width; column++)
+		{
+			address = (greyImage->width*row) + column;
+
+			value = ndata[address];
+
+		
+			newImage->imageData[address] = h[value];
+		}
+	}
+	//contrast inputImage
+	unsigned char *idata = (unsigned char*)inputImage->imageData;
+	int value2,value3,value4;
+	for(row=0;row<inputImage->height; row++)
+	{	
+		for(column=0 ; column<inputImage->width; column++)
+		{
+			address = (inputImage->width*row) + column;
+
+			value2 = idata[address*3];
+			value3 = idata[(address*3)+1];
+			value4 = idata[(address*3)+2];
+
+			contrastImage->imageData[(address*3)] = h2[value2];
+			contrastImage->imageData[(address*3)+1] = h3[value3];
+			contrastImage->imageData[(address*3)+2] = h4[value4];
+		}
+	}
+	
+	
+	//Binary image (Black and White) no gray color 
+	unsigned char *gdata = (unsigned char*)greyImage->imageData;
+	for(row=0;row<greyImage->height; row++)
+	{	
+		for(column=0 ; column<greyImage->width; column++)
+		{
+			address = (greyImage->width*row) + column;
+
+			value = gdata[address];
+
+			//if(value <50) binaryImage->imageData[address] = 255;
+			
+
+			if(value >161) binaryImage->imageData[address] = 0;
+			else binaryImage->imageData[address] = 255;
+
+			
+		}
+	}
+
+	
+	printf("\nNumber of Objects: %d",countObjects(binaryImage));
+	
+	//cvNamedWindow("Original Image",1);
+	//cvShowImage ("Original Image", inputImage);
+	//cvNamedWindow("Small Image",1);
+	//cvShowImage ("Small Image", smallImage);
+	//cvNamedWindow("Gray Image",1);
+	//cvShowImage ("Gray Image", greyImage);
+	//cvNamedWindow("Contrast Gray Image",1);
+	//cvShowImage ("Contrast Gray Image", newImage);
+	//cvNamedWindow("Contrast Input Image",1);
+	//cvShowImage ("Contrast Input Image", contrastImage);
+	
+	cvNamedWindow("Binary Image",1);
+	cvShowImage ("Binary Image", binaryImage);
+
+	
+	cvWaitKey();
+
+
+
+	return 0;
+}
+
+
+
+
+int countObjects(IplImage * binaryImage)
+{
+	int *valueImage = (int*)calloc(642*482,sizeof(int));
+	int P0,P1,P2,P3,P4;
+	int addressP1,addressP2,addressP3,addressP4,addressV,count,x;
+	int NumLabel = 0;
+	int *objects = (int*)calloc(255,sizeof(int));
+	int row,column,address;
+	unsigned char *data = (unsigned char*)binaryImage->imageData;
+
+	for(row = 1; row < 481;row++)
+	{
+		for(column = 1; column < 641;column++)
+		{
+			address = (binaryImage->width*(row-1)) + (column-1);
+			addressV = (642*(row)) + (column);
+
+			if(data[address] == 255)
+			{
+				
+				addressP1 = (642*(row-1)) + (column-1);
+				addressP2 = (642*(row-1)) + (column);
+				addressP3 = (642*(row-1)) + (column+1);
+				addressP4 = (642*(row)) + (column-1);
+				
+				P0 = valueImage[addressV];
+				P1 = valueImage[addressP1];
+				P2 = valueImage[addressP2];
+				P3 = valueImage[addressP3];
+				P4 = valueImage[addressP4];
+
+				/*if(P1 == 0 && P2 == 0 && P3 == 0 && P4 == 0)
+				{
+					NumLabel++;
+					addressV = (binaryImage->width*(row)) + (column);
+					valueImage[addressV] = NumLabel;	
+				}*/
+
+				if(P1 > 0)
+				{
+					valueImage[addressV] = P1;
+					P0 = P1;
+					if(P2>0)Evaluate(P0,P2,objects,NumLabel);
+					if(P3>0)Evaluate(P0,P3,objects,NumLabel);
+					if(P4>0)Evaluate(P0,P4,objects,NumLabel);
+
+				}
+				else if(P2 > 0) {
+					valueImage[addressV] = P2;
+					P0 = P2;
+					if(P3>0)Evaluate(P0,P3,objects,NumLabel);
+					if(P4>0)Evaluate(P0,P4,objects,NumLabel);
+				}
+				else if(P3 > 0) {
+					valueImage[addressV] = P3;
+					P0 = P3;
+					if(P4>0)Evaluate(P0,P4,objects,NumLabel);
+				}
+				else if(P4 > 0) {
+					valueImage[addressV] = P4;
+				}
+				else
+				{
+					NumLabel++;
+					valueImage[addressV] = NumLabel;
+					objects[NumLabel] = NumLabel; 
+				}
+					
+
+			}
+
+		}
+	}
+
+	count = 0;
+	for(x=1;x<=NumLabel;x++)
+	{
+		if(objects[x] == x) 
+		{
+		
+		count++;
+		printf("\nObject Count = %d",count);	
+		}
+	}
+
+	return count;
+}                                                                                                                                       
+
+
+void Evaluate(unsigned char P0,unsigned char P1, int *objects, int NumLabel)
+{
+	int higher,lower;
+	int x;
+	if(P0 != P1)
+	{
+		if(P0 > P1)
+		{ 
+			higher = P0; lower = P1;
+		}
+		else
+		{ 
+			higher = P1; lower = P0;
+		}
+
+		for(x=1;x<=NumLabel;x++)
+		{
+			if(objects[x] == higher) objects[x] = lower;
+		}
+	}
+	
+}
+

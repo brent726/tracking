@@ -1,0 +1,77 @@
+#include "stdafx.h"
+#include "opencv2/highgui/highgui.hpp"
+#include <iostream>
+#include <cv.h>
+#include <highgui.h>
+
+using namespace cv;
+using namespace std;
+
+int main(int argc, char* argv[])
+{
+    VideoCapture cap("E:\\Visual Studio Projects\\video.avi"); // open the video camera no. 0
+
+    if (!cap.isOpened())  // if not success, exit program
+    {
+        cout << "Cannot open the video cam" << endl;
+        return -1;
+    }
+
+   double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+   double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+    cout << "Frame size : " << dWidth << " x " << dHeight << endl;
+
+    namedWindow("OriginalVideo",CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
+	namedWindow("Location",CV_WINDOW_AUTOSIZE);
+	cvNamedWindow("Thresholded Image");
+
+    while (1)
+    {
+        Mat frame;
+
+        bool bSuccess = cap.read(frame); // read a new frame from video
+
+        if (!bSuccess) //if not success, break loop
+        {
+             cout << "Cannot read a frame from video stream" << endl;
+             break;
+        }
+		
+		IplImage *img = cvCloneImage(&(IplImage)frame);
+		cvSmooth(img, img, CV_GAUSSIAN,3,3);
+		IplImage* imgGrayScale = cvCreateImage(cvGetSize(img), 8, 1); 
+		cvCvtColor(img,imgGrayScale,CV_BGR2GRAY);
+		cv::Mat m = cv::cvarrToMat(imgGrayScale);
+
+		Mat image1 = m(Rect(0,0,125,175));
+		Mat image2 = m(Rect(150,23,149,144));
+		Mat image3 = m(Rect(325,17,152,144));
+		Mat image4 = m(Rect(2,204,133,130));
+		Mat image5 = m(Rect(155,200,147,139));
+		Mat image6 = m(Rect(329,199,149,135));
+		Mat image7 = m(Rect(12,362,137,117));
+		Mat image8 = m(Rect(162,367,144,111));
+		Mat image9 = m(Rect(331,365,138,112));
+		IplImage *img9 = cvCloneImage(&(IplImage)image9);
+		cvAdaptiveThreshold(img9,img9, 255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV, 39,2);
+
+		Mat image10 = m(Rect(500,0,101,108));
+
+		
+
+        imshow("OriginalVideo", frame); //show the frame in "MyVideo" window
+		imshow("Location", image9);
+		cvShowImage("Thresholded Image",img9);
+
+		
+
+        if (waitKey(30) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
+       {
+            cout << "esc key is pressed by user" << endl;
+            break; 
+       }
+    }
+    return 0;
+
+}

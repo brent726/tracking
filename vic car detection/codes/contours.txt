@@ -1,0 +1,45 @@
+#include "stdafx.h"
+#include <cv.h>
+#include <highgui.h>
+using namespace std;
+
+int main()
+{
+
+ IplImage* img =  cvLoadImage("E:\\Visual Studio Projects\\OpenCVProject\\board\\2.png");
+  
+ //show the original image
+ cvNamedWindow("Original");
+ cvShowImage("Original",img);
+
+ CvSeq* contour;  //hold the pointer to a contour
+ CvSeq* result;   //hold sequence of points of a contour
+ CvMemStorage *storage = cvCreateMemStorage(0); //storage area for all contours
+ 
+ //finding all contours in the image
+ cvFindContours(img, storage, &contour, sizeof(CvContour), CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0));
+  
+ //iterating through each contour
+ while(contour)
+ {
+  //obtain a sequence of points of the countour, pointed by the variable 'countour'
+  result = cvApproxPoly(contour, sizeof(CvContour), storage, CV_POLY_APPROX_DP, cvContourPerimeter(contour)*0.02, 0);
+  
+  printf("\n%d",result);
+
+  //obtain the next contour
+  contour = contour->h_next; 
+ }
+
+ //show the image in which identified shapes are marked   
+ 
+ cvWaitKey(0); //wait for a key press
+
+ //cleaning up
+ cvDestroyAllWindows(); 
+ cvReleaseMemStorage(&storage);
+ cvReleaseImage(&img);
+
+ return 0;
+}
+

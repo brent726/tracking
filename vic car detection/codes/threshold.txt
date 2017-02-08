@@ -1,0 +1,35 @@
+#include "stdafx.h"
+#include <cv.h>
+#include <highgui.h>
+using namespace std;
+
+int main()
+{
+
+ IplImage* img =  cvLoadImage("E:\\Visual Studio Projects\\OpenCVProject\\capture.jpg");
+  
+ //show the original image
+ cvNamedWindow("Original");
+ cvShowImage("Original",img);
+
+ //smooth the original image using Gaussian kernel to remove noise
+cvSmooth(img, img, CV_GAUSSIAN,3,3);
+
+ //converting the original image into grayscale
+ IplImage* imgGrayScale = cvCreateImage(cvGetSize(img), 8, 1); 
+ cvCvtColor(img,imgGrayScale,CV_BGR2GRAY);
+
+ //thresholding the grayscale image to get better results
+ cvThreshold(imgGrayScale,imgGrayScale,100,255,CV_THRESH_BINARY_INV);
+
+ cvNamedWindow("Thresholded Image");
+ cvShowImage("Thresholded Image",imgGrayScale);
+ cvWaitKey(0); //wait for a key press
+
+ //cleaning up
+ cvDestroyAllWindows(); 
+ cvReleaseImage(&img);
+ cvReleaseImage(&imgGrayScale);
+
+ return 0;
+}

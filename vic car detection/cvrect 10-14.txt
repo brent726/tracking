@@ -1,0 +1,9 @@
+		cv::Rect myROI1(5,29,116,125);
+		cv::Rect myROI2(165,25,137,129);
+		cv::Rect myROI3(344,14,137,136);
+		cv::Rect myROI4(18,201,116,123);
+		cv::Rect myROI5(179,195,130,128);
+		cv::Rect myROI6(351,191,131,128);
+		cv::Rect myROI7(35,363,121,113);
+		cv::Rect myROI8(189,362,127,117);
+		cv::Rect myROI9(355,359,125,117);

@@ -1,0 +1,38 @@
+#include "stdafx.h"
+#include <highgui.h>
+#include <cv.h>
+#include <cxcore.h>
+#include <iostream>
+
+using namespace std;
+
+
+void captureImage()
+{
+	CvCapture* capture = 0; 
+
+    capture = cvCaptureFromCAM(0); //0=default, -1=any camera, 1..99=your cameram (port Number)
+    if(!capture) cout << "No camera detected" << endl;
+
+    if( capture )
+    {
+        
+            IplImage* iplImg = cvQueryFrame( capture );
+			cvNamedWindow("Capture Image", 1);
+		    
+			cvSaveImage("E:\\Visual Studio Projects\\pictures\\capture.jpg", iplImg, 0);
+
+			IplImage *img=cvLoadImage("E:\\Visual Studio Projects\\pictures\\capture.jpg",1);
+
+			cvShowImage("Capture Image", img);
+	}
+}
+int _tmain(int argc, _TCHAR* argv[])
+{
+  
+   captureImage();
+
+   return 1;
+
+}
+

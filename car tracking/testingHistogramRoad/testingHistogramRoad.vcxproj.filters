@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="package_bgs">
+      <UniqueIdentifier>{e5756a8d-86a0-4d22-be58-0ef064f541e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="package_tracking">
+      <UniqueIdentifier>{a58b7295-ca1e-4d3b-acfe-5bdb49f0824c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="package_analysis">
+      <UniqueIdentifier>{e482105e-a311-40c9-9770-6149d6992409}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="package_bgs\PBAS">
+      <UniqueIdentifier>{93c9f539-620d-44e7-8e6e-cf7f6b201358}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="package_tracking\cvblob">
+      <UniqueIdentifier>{142735d0-d4b5-498d-aabe-24b289ab76b1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="package_analysis\VehicleCouting.h">
+      <Filter>package_analysis</Filter>
+    </ClInclude>
+    <ClInclude Include="package_bgs\PBAS\PBAS.h">
+      <Filter>package_bgs\PBAS</Filter>
+    </ClInclude>
+    <ClInclude Include="package_bgs\PBAS\PixelBasedAdaptiveSegmenter.h">
+      <Filter>package_bgs\PBAS</Filter>
+    </ClInclude>
+    <ClInclude Include="package_bgs\IBGS.h">
+      <Filter>package_bgs</Filter>
+    </ClInclude>
+    <ClInclude Include="package_tracking\BlobTracking.h">
+      <Filter>package_tracking</Filter>
+    </ClInclude>
+    <ClInclude Include="package_tracking\cvblob\cvblob.h">
+      <Filter>package_tracking\cvblob</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="testingHistogramRoad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="package_analysis\VehicleCouting.cpp">
+      <Filter>package_analysis</Filter>
+    </ClCompile>
+    <ClCompile Include="package_bgs\PBAS\PixelBasedAdaptiveSegmenter.cpp">
+      <Filter>package_bgs\PBAS</Filter>
+    </ClCompile>
+    <ClCompile Include="package_bgs\PBAS\PBAS.cpp">
+      <Filter>package_bgs\PBAS</Filter>
+    </ClCompile>
+    <ClCompile Include="package_tracking\BlobTracking.cpp">
+      <Filter>package_tracking</Filter>
+    </ClCompile>
+    <ClCompile Include="package_tracking\cvblob\cvcolor.cpp">
+      <Filter>package_tracking\cvblob</Filter>
+    </ClCompile>
+    <ClCompile Include="package_tracking\cvblob\cvcontour.cpp">
+      <Filter>package_tracking\cvblob</Filter>
+    </ClCompile>
+    <ClCompile Include="package_tracking\cvblob\cvlabel.cpp">
+      <Filter>package_tracking\cvblob</Filter>
+    </ClCompile>
+    <ClCompile Include="package_tracking\cvblob\cvtrack.cpp">
+      <Filter>package_tracking\cvblob</Filter>
+    </ClCompile>
+    <ClCompile Include="package_tracking\cvblob\cvaux.cpp">
+      <Filter>package_tracking\cvblob</Filter>
+    </ClCompile>
+    <ClCompile Include="package_tracking\cvblob\cvblob.cpp">
+      <Filter>package_tracking\cvblob</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
