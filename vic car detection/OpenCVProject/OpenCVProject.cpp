@@ -120,7 +120,35 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 	}
 
 }
+Mat sobel(Mat gray){
+	Mat edges;
 
+	int scale = 1;
+	int delta = 0;
+	int ddepth = CV_16S;
+	Mat edges_x, edges_y;
+	Mat abs_edges_x, abs_edges_y;
+	Sobel(gray, edges_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT);
+	convertScaleAbs( edges_x, abs_edges_x );
+	Sobel(gray, edges_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT);
+	convertScaleAbs(edges_y, abs_edges_y);
+	addWeighted(abs_edges_x, 0.5, abs_edges_y, 0.5, 0, edges);
+
+	return edges;
+}
+
+Mat canny(Mat src)
+{
+	Mat detected_edges;
+
+	int edgeThresh = 1;
+	int lowThreshold = 250;
+	int highThreshold = 750;
+	int kernel_size = 5;
+	Canny(src, detected_edges, lowThreshold, highThreshold, kernel_size);
+
+	return detected_edges;
+ }
 int main(){
 
 	//some boolean variables for added functionality
@@ -168,33 +196,89 @@ int main(){
 	
 
 	//video start
-	while(capture.get(CV_CAP_PROP_POS_FRAMES)<capture.get(CV_CAP_PROP_FRAME_COUNT)-1)
-	{
+	//while(capture.get(CV_CAP_PROP_POS_FRAMES)<capture.get(CV_CAP_PROP_FRAME_COUNT)-1)
+	//{
 	capture.read(frame1);
 	//frame1 = imread("E:/Project Alpha/Dataset/New/1.png", CV_LOAD_IMAGE_COLOR);
+	frame1=imread("2.PNG");
+	
+	Mat hsvImg;
+	cvtColor(frame1, hsvImg, CV_BGR2HSV);
+	Mat channel[3];
+	split(hsvImg, channel);
+	//channel[0] = Mat(hsvImg.rows, hsvImg.cols, CV_8UC1, 100);//Set H
+	//channel[1] = Mat(hsvImg.rows, hsvImg.cols, CV_8UC1, 80);//Set S
+	channel[2] = Mat(hsvImg.rows, hsvImg.cols, CV_8UC1, 200);//Set V
+	//Merge channels
+	merge(channel, 3, hsvImg);
+	//imshow("Frame", frame1);
+	Mat rgbImg;
+	cvtColor(hsvImg, rgbImg, CV_HSV2BGR);
+	imshow("1. \"Remove Shadows\"", rgbImg);
 
-	cv::cvtColor(frame1,grayImage1,COLOR_BGR2GRAY);
-	GaussianBlur(grayImage1, grayImage1, Size(15,15), 0, 0, BORDER_DEFAULT );
+	cv::cvtColor(rgbImg,grayImage1,COLOR_BGR2GRAY);
+	normalize(grayImage1, grayImage1, 0, 255, NORM_MINMAX, CV_8UC1);
+	imshow("2. Grayscale", grayImage1);
+	//GaussianBlur(grayImage1, grayImage1, Size(15,15), 0, 0, BORDER_DEFAULT );
 	//sobel 
-	Sobel( grayImage1, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+	/*Sobel( grayImage1, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
 	convertScaleAbs( grad_x, abs_grad_x );
 	Sobel( grayImage1, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
-	convertScaleAbs( grad_y, abs_grad_y );
-	addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
-	//cv::imshow("Sobel Image", grad);
-	cv::threshold(grad,thresholdImage,25,255,THRESH_BINARY);
-	//cv::imshow("Threshold Image", thresholdImage);
-	morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
-	cv::imshow("Morphed Image", thresholdImage);
+    convertScaleAbs( grad_y, abs_grad_y );
+	 addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+	cv::imshow("Sobel Image", grad);*/
+	FILE * f;
+	f = fopen("hsv.txt", "w");
+	for(int i=0;i<hsvImg.size().width;i++)
+	{
+		for(int j=0;j<hsvImg.size().height;j++)
+		{
+			
+			fprintf(f,"h=%d s:%d v:%d\n", hsvImg.at<Vec3b>(Point(i, j)).val[0], hsvImg.at<Vec3b>(Point(i, j)).val[1], hsvImg.at<Vec3b>(Point(i, j)).val[2]);
+		}
+	}
+
+	//3. Edge detector
+	GaussianBlur(grayImage1, grayImage1, Size(3,3), 0, 0, BORDER_DEFAULT);
+	Mat edges;
+	bool useCanny = false;
+	if(useCanny){
+		edges = canny(grayImage1);
+	} else {
+		//Use Sobel filter and thresholding.
+		edges = sobel(grayImage1);
+		//Automatic thresholding
+		//threshold(edges, edges, 0, 255, cv::THRESH_OTSU);
+		//Manual thresholding
+		threshold(edges, edges, 25, 255, cv::THRESH_BINARY);
+	}
+
+	imshow("3. Edge Detector", edges);
+	//4. Dilate
+	Mat dilateGrad = edges;
+	int dilateType = MORPH_RECT;
+	int dilateSize = 1;
+	Mat elementDilate = getStructuringElement(dilateType,
+		Size(2*dilateSize + 1, 2*dilateSize+1),
+		Point(dilateSize, dilateSize));
+	dilate(edges, dilateGrad, elementDilate);
+	imshow("4. Dilate", dilateGrad);
+	
+	//5. Floodfill
+	Mat floodFilled = cv::Mat::zeros(dilateGrad.rows+2, dilateGrad.cols+2, CV_8U);
+	floodFill(dilateGrad, floodFilled, cv::Point(0, 0), 0, 0, cv::Scalar(), cv::Scalar(), 4 + (255 << 8) + cv::FLOODFILL_MASK_ONLY);
+	floodFilled = cv::Scalar::all(255) - floodFilled;
+	Mat temp;
+	floodFilled(Rect(1, 1, dilateGrad.cols-2, dilateGrad.rows-2)).copyTo(temp);
+	floodFilled = temp;
+	imshow("5. Floodfill", floodFilled);
 
 	if(true)
 	{
 
-		searchForVehicle(thresholdImage,frame1);
+		searchForVehicle(floodFilled,frame1);
 	}
-
 	imshow("Frame1",frame1);
-
 	//waitKey(0);
 	//waitkey for video
 	switch(waitKey(100/fps)){
@@ -220,7 +304,7 @@ int main(){
 					}
 				}
 				}
-			}
+			//}
 	}//video end
 	return 0;
 
