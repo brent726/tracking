@@ -32,6 +32,22 @@ int capnum = 0;
 char path[70];
 char path_gray[70];
 
+
+void on_mouse(int event, int x, int y, int flags, void* userdata)
+{
+	Mat frame1=imread("60mCrop.PNG");
+    Point *p=(Point*)userdata;
+	p->x=x;
+	p->y=y;
+	Mat hsvImg;
+	cvtColor(frame1, hsvImg, CV_BGR2HSV);
+	if  ( event == EVENT_LBUTTONDOWN )
+     {
+          cout << "Left button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
+		  printf("h=%d s:%d v:%d\n", hsvImg.at<Vec3b>(Point(p->x, p->y)).val[0], hsvImg.at<Vec3b>(Point(p->x, p->y)).val[1], hsvImg.at<Vec3b>(Point(p->x, p->y)).val[2]);
+	 }
+}
+
 //int to string helper function
 string intToString(int number){
 
@@ -101,8 +117,11 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 					cout << " Height: " << height;
 					printf("\n");
 
-					if(width>50 && width <140 && height>30 && height<50)
+					//if(width>50 && width <140 && height>30 && height<50)
+					if(width>10 && width <140 && height>20 && height<50)
+					//if(width>50 && height>30)
 					{
+					
 					Vehicle car;
 					
 					car.setXPos(moment.m10/area);
@@ -180,11 +199,13 @@ int main(){
 	Rect ROAD(1,219,1279,327);
 	//video capture object
 	VideoCapture capture;
-	capture.open("\\\\Mac\\Home\\Desktop\\DroneVideos\\60m.mp4");
+	//capture.open("\\\\Mac\\Home\\Desktop\\DroneVideos\\60m.mp4");
+	capture.open("C:\\Users\\PCBLAB_01\\Desktop\\60m.mp4");
 	double fps = capture.get(CV_CAP_PROP_FPS);
 	if(!capture.isOpened())
 	{
 		cout<<"ERROR ACQUIRING VIDEO FEED\n";
+		getch();
 		waitKey();
 		return -1;
 	}
@@ -198,23 +219,72 @@ int main(){
 	//video start
 	//while(capture.get(CV_CAP_PROP_POS_FRAMES)<capture.get(CV_CAP_PROP_FRAME_COUNT)-1)
 	//{
-	capture.read(frame1);
+	//capture.read(frame1);
 	//frame1 = imread("E:/Project Alpha/Dataset/New/1.png", CV_LOAD_IMAGE_COLOR);
-	frame1=imread("2.PNG");
+	frame1=imread("60mCrop.PNG");
 	
 	Mat hsvImg;
 	cvtColor(frame1, hsvImg, CV_BGR2HSV);
-	Mat channel[3];
-	split(hsvImg, channel);
+	
+	Point p;
+	
+	
+	//Mat channel[3];
+	//split(hsvImg, channel);
 	//channel[0] = Mat(hsvImg.rows, hsvImg.cols, CV_8UC1, 100);//Set H
 	//channel[1] = Mat(hsvImg.rows, hsvImg.cols, CV_8UC1, 80);//Set S
-	channel[2] = Mat(hsvImg.rows, hsvImg.cols, CV_8UC1, 200);//Set V
-	//Merge channels
-	merge(channel, 3, hsvImg);
-	//imshow("Frame", frame1);
+
+	
+	//channel[2] = Mat(hsvImg.rows, hsvImg.cols, CV_8UC1, 200);//Set V
 	Mat rgbImg;
+	
+	for(int x=0;x<hsvImg.size().width;x++)
+	{
+			for(int y=0;y<hsvImg.size().height;y++)
+			{
+				if( hsvImg.at<Vec3b>(Point(x, y)).val[2]<235)
+				{
+						hsvImg.at<Vec3b>(Point(x, y)).val[2]=200;//set v for those less than 235 road
+						//hsvImg.at<Vec3b>(Point(x, y)).val[1]=180;
+						//hsvImg.at<Vec3b>(Point(x, y)).val[0]=255;
+				}
+				
+			}
+	}
 	cvtColor(hsvImg, rgbImg, CV_HSV2BGR);
+	/*for(int x=0;x<hsvImg.size().width;x++)
+	{
+			for(int y=0;y<hsvImg.size().height;y++)
+			{
+				if( (hsvImg.at<Vec3b>(Point(x, y)).val[1]>40||hsvImg.at<Vec3b>(Point(x, y)).val[0]>40)//if white or h or v is greater than 40
+				{
+						rgbImg.at<Vec3b>(Point(x, y)).val[2]=0;//set v for those less than 235 road
+						rgbImg.at<Vec3b>(Point(x, y)).val[1]=0;
+						rgbImg.at<Vec3b>(Point(x, y)).val[0]=0;
+				}
+			}
+	}*/
+
+	//Merge channels
+	//merge(channel, 3, hsvImg);
+
+	/*FILE * f;
+	f = fopen("hsv.txt", "w");
+	for(int i=0;i<hsvImg.size().width;i++)
+	{
+		for(int j=0;j<hsvImg.size().height;j++)
+		{
+			if( hsvImg.at<Vec3b>(Point(i, j)).val[0]>90)
+			{
+			
+			}
+			//fprintf(f,"h=%d s:%d v:%d\n", hsvImg.at<Vec3b>(Point(i, j)).val[0], hsvImg.at<Vec3b>(Point(i, j)).val[1], hsvImg.at<Vec3b>(Point(i, j)).val[2]);
+		*/
+	
 	imshow("1. \"Remove Shadows\"", rgbImg);
+
+	setMouseCallback("1. \"Remove Shadows\"", on_mouse, &p);
+	
 
 	cv::cvtColor(rgbImg,grayImage1,COLOR_BGR2GRAY);
 	normalize(grayImage1, grayImage1, 0, 255, NORM_MINMAX, CV_8UC1);
@@ -227,19 +297,13 @@ int main(){
     convertScaleAbs( grad_y, abs_grad_y );
 	 addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
 	cv::imshow("Sobel Image", grad);*/
-	FILE * f;
-	f = fopen("hsv.txt", "w");
-	for(int i=0;i<hsvImg.size().width;i++)
-	{
-		for(int j=0;j<hsvImg.size().height;j++)
-		{
-			
-			fprintf(f,"h=%d s:%d v:%d\n", hsvImg.at<Vec3b>(Point(i, j)).val[0], hsvImg.at<Vec3b>(Point(i, j)).val[1], hsvImg.at<Vec3b>(Point(i, j)).val[2]);
-		}
-	}
+	
 
 	//3. Edge detector
-	GaussianBlur(grayImage1, grayImage1, Size(3,3), 0, 0, BORDER_DEFAULT);
+	//GaussianBlur(grayImage1, grayImage1, Size(3,3), 0, 0, BORDER_DEFAULT);
+	GaussianBlur(grayImage1, grayImage1, Size(15,15), 0, 0, BORDER_DEFAULT);
+	imshow("Gaussian Blurr",grayImage1);
+
 	Mat edges;
 	bool useCanny = false;
 	if(useCanny){
@@ -254,6 +318,15 @@ int main(){
 	}
 
 	imshow("3. Edge Detector", edges);
+	
+	int morph_size = 1;
+	Mat element = getStructuringElement( MORPH_RECT, Size( 2*morph_size + 1, 2*morph_size+1 ), Point( morph_size, morph_size ) );
+	Mat morphImg;
+	for (int i=0;i<1;i++)
+	{   
+			morphologyEx( edges, morphImg, 2, element, Point(-1,-1), i );   
+	}   
+	imshow("Morph Binary Image", morphImg);
 	//4. Dilate
 	Mat dilateGrad = edges;
 	int dilateType = MORPH_RECT;
@@ -261,25 +334,26 @@ int main(){
 	Mat elementDilate = getStructuringElement(dilateType,
 		Size(2*dilateSize + 1, 2*dilateSize+1),
 		Point(dilateSize, dilateSize));
-	dilate(edges, dilateGrad, elementDilate);
+	dilate(morphImg, dilateGrad, elementDilate);
 	imshow("4. Dilate", dilateGrad);
-	
+
+
 	//5. Floodfill
-	Mat floodFilled = cv::Mat::zeros(dilateGrad.rows+2, dilateGrad.cols+2, CV_8U);
-	floodFill(dilateGrad, floodFilled, cv::Point(0, 0), 0, 0, cv::Scalar(), cv::Scalar(), 4 + (255 << 8) + cv::FLOODFILL_MASK_ONLY);
+	Mat floodFilled = cv::Mat::zeros(edges.rows+2, edges.cols+2, CV_8U);
+	floodFill(morphImg, floodFilled, cv::Point(0, 0), 0, 0, cv::Scalar(), cv::Scalar(), 4 + (255 << 8) + cv::FLOODFILL_MASK_ONLY);
 	floodFilled = cv::Scalar::all(255) - floodFilled;
 	Mat temp;
-	floodFilled(Rect(1, 1, dilateGrad.cols-2, dilateGrad.rows-2)).copyTo(temp);
+	floodFilled(Rect(1, 1, edges.cols-2, edges.rows-2)).copyTo(temp);
 	floodFilled = temp;
 	imshow("5. Floodfill", floodFilled);
-
+	
 	if(true)
 	{
 
-		searchForVehicle(floodFilled,frame1);
+		searchForVehicle(morphImg,frame1);
 	}
 	imshow("Frame1",frame1);
-	//waitKey(0);
+	waitKey();
 	//waitkey for video
 	switch(waitKey(100/fps)){
 				case 27: //'esc' key has been pressed, exit program.
@@ -304,8 +378,8 @@ int main(){
 					}
 				}
 				}
-			//}
-	}//video end
+		}
+	//}//video end
 	return 0;
 
 }
