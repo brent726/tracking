@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 #include "highgui.h"
 #include "cv.h"
@@ -112,23 +111,26 @@ int main(){
         if( img.empty() )
             break;
 
-        //cvtColor(_img, img, COLOR_BGR2GRAY);
+        //cvtColor(img, img, COLOR_BGR2GRAY);
 
         if( fgimg.empty() )
           fgimg.create(img.size(), img.type());
 
         //update the model
-        bg_model(img, fgmask, update_bg_model ? -1 : 0);
-
-        fgimg = Scalar::all(0);
-        img.copyTo(fgimg, fgmask);
-
-        Mat bgimg;
-        bg_model.getBackgroundImage(bgimg);
-
+		//Computes a foreground mask.
+		bg_model(img, fgmask, update_bg_model?-1:0);
+		//image	Next video frame. Floating point frame will be used without scaling and should be in range [0,255].
+		//fgmask	The output foreground mask as an 8-bit binary image.
+		//learningRate	The value between 0 and 1 that indicates how fast the background model is learnt. Negative parameter value makes the algorithm to use some automatically chosen learning rate. 0 means that the background model is not updated at all, 1 means that the background model is completely reinitialized from the last frame.
+		fgimg = Scalar::all(0);
+		img.copyTo(fgimg, fgmask);
         imshow("image", img);
         imshow("foreground mask", fgmask);
         imshow("foreground image", fgimg);
+		
+		Mat bgimg;
+        bg_model.getBackgroundImage(bgimg);
+
         if(!bgimg.empty())
           imshow("mean background image", bgimg );
 
@@ -143,7 +145,7 @@ int main(){
                 printf("Background update is off\n");
         }
     }
-	waitKey();
+	//waitKey();
 	//waitkey for video
 	switch(waitKey(100/fps)){
 				case 27: //'esc' key has been pressed, exit program.
