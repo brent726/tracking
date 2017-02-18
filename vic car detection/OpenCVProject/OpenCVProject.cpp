@@ -1,3 +1,7 @@
+
+
+
+
 #include "stdafx.h"
 #include "highgui.h"
 #include "cv.h"
@@ -11,132 +15,58 @@
 using namespace std;
 using namespace cv;
 
-
-//default capture width and height
-const int FRAME_WIDTH = 1280;
-const int FRAME_HEIGHT = 720;
-//our sensitivity value to be used in the absdiff() function
-const static int SENSITIVITY_VALUE = 40;
-//size of blur used to smooth the intensity image output from absdiff() function
-const static int BLUR_SIZE = 3;
-//we'll have just one object to search for
-const int MAX_NUM_OBJECTS=50;
-const int MIN_OBJECT_AREA = 5*5;
-
-const int MAX_OBJECT_AREA = 100*50;
-//bounding rectangle of the object, we will use the center of this as its position.
-Rect objectBoundingRectangle = Rect(0,0,0,0);
-
-//string
-int capnum = 0;
-char path[70];
-char path_gray[70];
-
-
-static void help()
+int main()
 {
- printf("\nDo background segmentation, especially demonstrating the use of cvUpdateBGStatModel().\n"
-"Learns the background at the start and then segments.\n"
-"Learning is togged by the space key. Will read from file or camera\n"
-"Usage: \n"
-"			./bgfg_segm [--camera]=<use camera, if this key is present>, [--file_name]=<path to movie file> \n\n");
-}
-
-const char* keys =
-{
-    "{c |camera   |true    | use camera or not}"
-    "{fn|file_name|tree.avi | movie file             }"
-};
-
-
-int main(){
-
-	//some boolean variables for added functionality
-	bool pause=false;
-	//these two can be toggled by pressing 'd' or 't'
 	
-	//road size
-	Rect ROAD(1,219,1279,327);
-	//video capture object
-	VideoCapture capture;
-	
-	capture.open("C:\\Users\\PCBLAB_01\\Desktop\\60m.mp4");
-	double fps = capture.get(CV_CAP_PROP_FPS);
-	if(!capture.isOpened())
-	{
-		cout<<"ERROR ACQUIRING VIDEO FEED\n";
-		getch();
-		waitKey();
-		return -1;
-	}
-	cout<<"Video FPS: "<<fps<<endl;
-	//video frame details
-	double dWidth = capture.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
-	double dHeight = capture.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
-	cout << "Frame Size = " << dWidth << "x" << dHeight << endl;
-	
+    int count;
+  	double area, ar;
+	vector<Vec4i> hierarchy;
+    Mat frame, fore, img, prevImg, temp, gray, vehicle_ROI, img_temp;
+	boolean update_bg_model=true;
+    VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\60m.mp4");
+    BackgroundSubtractorMOG2 bg;//(50, 25, false);
+	BackgroundSubtractorMOG2 bg_model;
+    vector<vector<Point> > contours;
+    vector<Rect> cars;
+    namedWindow("Frame");
+    
+	double fps = cap.get(CV_CAP_PROP_FPS);
 
-	help();
-
-//    bool useCamera = parser.get<bool>("camera");
-    //string file = parser.get<string>("file_name");
-  
-    bool update_bg_model = true;
-/*
-    if( useCamera )
-        cap.open(0);
-    else
-        cap.open(file.c_str());
-    parser.printParams();
-
-    if( !cap.isOpened() )
+    cap >> img_temp;
+    cvtColor(img_temp, gray, CV_BGR2GRAY);
+    gray.convertTo(temp, CV_8U);
+    bilateralFilter(temp, prevImg, 5, 20, 20);
+   
+    while(true)
     {
-        printf("can not open camera or video file\n");
-        return -1;
-    }
-*/
-    namedWindow("image", WINDOW_NORMAL);
-    namedWindow("foreground mask", WINDOW_NORMAL);
-    namedWindow("foreground image", WINDOW_NORMAL);
-    namedWindow("mean background image", WINDOW_NORMAL);
-
-    BackgroundSubtractorMOG2 bg_model;//(100, 3, 0.3, 5);
-
-    Mat img, fgmask, fgimg;
-
-    for(;;)
-    {
-        capture >> img;
-
-        if( img.empty() )
+        count=0;
+        cap >> frame;
+        
+		if( frame.empty() )
             break;
 
-        //cvtColor(img, img, COLOR_BGR2GRAY);
+		Mat fgimg, fgmask;
 
-        if( fgimg.empty() )
-          fgimg.create(img.size(), img.type());
+		if( fgimg.empty() )
+          fgimg.create(frame.size(), frame.type());
 
-        //update the model
-		//Computes a foreground mask.
-		bg_model(img, fgmask, update_bg_model?-1:0);
-		//image	Next video frame. Floating point frame will be used without scaling and should be in range [0,255].
-		//fgmask	The output foreground mask as an 8-bit binary image.
-		//learningRate	The value between 0 and 1 that indicates how fast the background model is learnt. Negative parameter value makes the algorithm to use some automatically chosen learning rate. 0 means that the background model is not updated at all, 1 means that the background model is completely reinitialized from the last frame.
+		 //update the model
+        bg_model(frame, fgmask, update_bg_model ? -1 : 0);
+
 		fgimg = Scalar::all(0);
-		img.copyTo(fgimg, fgmask);
-        imshow("image", img);
-        imshow("foreground mask", fgmask);
-        imshow("foreground image", fgimg);
-		
+        frame.copyTo(fgimg, fgmask);
 		Mat bgimg;
         bg_model.getBackgroundImage(bgimg);
+		//imshow("image", frame);
+        //imshow("foreground mask", fgmask);
+        imshow("foreground image", fgimg);
 
-        if(!bgimg.empty())
+		if(!bgimg.empty())
           imshow("mean background image", bgimg );
 
-        char k = (char)waitKey(30);
-        if( k == 27 ) break;
-        if( k == ' ' )
+		char w = (char)waitKey(30);
+        if( w == 27 ) break;
+        if( w == ' ' )
         {
             update_bg_model = !update_bg_model;
             if(update_bg_model)
@@ -144,10 +74,97 @@ int main(){
             else
                 printf("Background update is off\n");
         }
-    }
-	//waitKey();
-	//waitkey for video
-	switch(waitKey(100/fps)){
+        
+
+
+		 //update the model
+       //bg_model(img, fgmask, update_bg_model ? -1 : 0);
+        cvtColor(fgimg, gray, CV_BGR2GRAY);
+		imshow("gray",gray);
+        gray.convertTo(temp, CV_8U);
+		
+        bilateralFilter(temp, prevImg, 5, 20, 20);
+		imshow("temp prev Img",gray);
+
+        bg.operator()(fgimg,fore);
+		imshow("fore",fore);
+		
+		
+        //erode(fore,fore,Mat());
+        //dilate(fore,fore,Mat());
+        findContours(fore,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
+		for( int i = 0; i< contours.size(); i++ )
+		{
+         cv::drawContours(fore, contours, i, Scalar(255, 255, 255), 1);
+		}
+		//imshow("fore dilated",fore);
+        vector<vector<Point> > contours_poly(contours.size());
+		vector<Rect> boundRect(contours.size());
+        
+        for(size_t i = 0; i < contours.size(); i++ )
+		{
+			approxPolyDP( Mat(contours[i]), contours_poly[i], 10, true );
+			boundRect[i] = boundingRect( Mat(contours_poly[i]) );
+			//rectangle( fgimg, boundRect[i].tl(), boundRect[i].br(), Scalar(255,0,0), 2, 8, 0 );
+            
+			vehicle_ROI = fgimg(boundRect[i]);
+            area = contourArea(contours[i], false);
+            ar = vehicle_ROI.cols/vehicle_ROI.rows;
+            if(area > 450.0 && ar > 0.8)
+            {
+				rectangle( fgimg, boundRect[i].tl(), boundRect[i].br(), Scalar(255,0,0), 2, 8, 0 );
+                count=count+1;
+            }
+        }
+		
+		for( int i = 0; i< contours.size(); i++ )
+		{
+         cv::drawContours(fgimg, contours, i, Scalar(255, 255, 255), 1);
+		}
+		imshow("frame Rect",fgimg);
+		printf("Count: %d\n", count);
+        stringstream ss;
+        ss << count;
+        string s = ss.str();
+        int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
+        double fontScale = 2;
+        int thickness = 3;
+        cv::Point textOrg(10, 130);
+        cv::putText(frame, s, textOrg, fontFace, fontScale, Scalar(0,255,0), thickness,5);
+       
+        int win_size = 10;
+        int maxCorners = 200;
+        double qualityLevel = 0.01;
+        double minDistance = 1;
+        int blockSize = 3;
+        double k = 0.04;
+        vector<Point2f> img_corners;
+        img_corners.reserve(maxCorners);
+        vector<Point2f> prevImg_corners;
+        prevImg_corners.reserve(maxCorners);
+
+       //goodFeaturesToTrack(fgimg, img_corners, maxCorners,qualityLevel,minDistance,Mat(),blockSize,true);
+
+        /*cornerSubPix( fgimg, img_corners, Size( win_size, win_size ), Size( -1, -1 ),
+                     TermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.03 ) );
+        
+        vector<uchar> features_found;
+        features_found.reserve(maxCorners);
+        vector<float> feature_errors;
+        feature_errors.reserve(maxCorners);
+        
+       calcOpticalFlowPyrLK( fgimg, prevImg, img_corners, prevImg_corners, features_found, feature_errors ,
+                             Size( win_size, win_size ), 3,
+                             cvTermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.3 ), 0, k);
+        
+        for( int i=0; i < features_found.size(); i++ ){
+
+            Point2f p0( ceil( img_corners[i].x ), ceil( img_corners[i].y ) );
+            Point2f p1( ceil( prevImg_corners[i].x ), ceil( prevImg_corners[i].y ) );
+            line( frame, p0, p1, CV_RGB(255,0,0), 5 );
+        }*/
+		bool pause= false;
+        switch(waitKey(100/fps)){
 				case 27: //'esc' key has been pressed, exit program.
 				return 0;
 				case 112: //'p' has been pressed. this will pause/resume the code.
@@ -169,9 +186,15 @@ int main(){
 						break;
 					}
 				}
-				}
+			}
 		}
-	//}//video end
-	return 0;
-
+		
+        //prevImg = img;
+        prevImg = frame;
+        imshow("Frame",frame);
+        
+        if(waitKey(5) >= 0)
+            break;
+    }
+    
 }
