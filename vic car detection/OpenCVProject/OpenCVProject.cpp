@@ -31,11 +31,6 @@ int main()
     namedWindow("Frame");
     
 	double fps = cap.get(CV_CAP_PROP_FPS);
-
-    cap >> img_temp;
-    cvtColor(img_temp, gray, CV_BGR2GRAY);
-    gray.convertTo(temp, CV_8U);
-    bilateralFilter(temp, prevImg, 5, 20, 20);
    
     while(true)
     {
@@ -44,49 +39,17 @@ int main()
         
 		if( frame.empty() )
             break;
-
-		Mat fgimg, fgmask;
-
-		if( fgimg.empty() )
-          fgimg.create(frame.size(), frame.type());
-
-		 //update the model
-        bg_model(frame, fgmask, update_bg_model ? -1 : 0);
-
-		fgimg = Scalar::all(0);
-        frame.copyTo(fgimg, fgmask);
-		Mat bgimg;
-        bg_model.getBackgroundImage(bgimg);
-		//imshow("image", frame);
-        //imshow("foreground mask", fgmask);
-        imshow("foreground image", fgimg);
-
-		if(!bgimg.empty())
-          imshow("mean background image", bgimg );
-
-		char w = (char)waitKey(30);
-        if( w == 27 ) break;
-        if( w == ' ' )
-        {
-            update_bg_model = !update_bg_model;
-            if(update_bg_model)
-                printf("Background update is on\n");
-            else
-                printf("Background update is off\n");
-        }
         
-
-
 		 //update the model
        //bg_model(img, fgmask, update_bg_model ? -1 : 0);
-        cvtColor(fgimg, gray, CV_BGR2GRAY);
+        cvtColor(frame, gray, CV_BGR2GRAY);
 		imshow("gray",gray);
         gray.convertTo(temp, CV_8U);
 		
-        bilateralFilter(temp, prevImg, 5, 20, 20);
-		imshow("temp prev Img",gray);
+        //bilateralFilter(temp, prevImg, 5, 20, 20);
+		//imshow("temp prev Img",gray);
 
-        bg.operator()(fgimg,fore);
+        bg.operator()(frame,fore);
 		imshow("fore",fore);
 		
 		
