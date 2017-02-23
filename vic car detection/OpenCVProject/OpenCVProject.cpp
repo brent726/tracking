@@ -17,15 +17,22 @@ using namespace cv;
 
 int main()
 {
-	
+	//their grayscale images (needed for absdiff() function)
+	Mat grayImage1,grayImage2;
+	//sobel parameters
+	Mat grad;
+	int ddepth = CV_16S;
+	int scale = 1;
+	int delta = 0;
+	Mat grad_x, grad_y;
+	Mat abs_grad_x, abs_grad_y;
     int count;
   	double area, ar;
 	vector<Vec4i> hierarchy;
-    Mat frame, fore, img, prevImg, temp, gray, vehicle_ROI, img_temp;
-	boolean update_bg_model=true;
+    Mat frame, img, prevImg, temp, gray, vehicle_ROI, img_temp;
     VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\60m.mp4");
-    BackgroundSubtractorMOG2 bg;//(50, 25, false);
-	BackgroundSubtractorMOG2 bg_model;
+	//VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
+	
     vector<vector<Point> > contours;
     vector<Rect> cars;
     namedWindow("Frame");
@@ -39,93 +46,37 @@ int main()
         
 		if( frame.empty() )
             break;
-        
-		 //update the model
-       //bg_model(img, fgmask, update_bg_model ? -1 : 0);
-        cvtColor(frame, gray, CV_BGR2GRAY);
-		imshow("gray",gray);
-        gray.convertTo(temp, CV_8U);
 		
-        //bilateralFilter(temp, prevImg, 5, 20, 20);
-		//imshow("temp prev Img",gray);
+		cv::cvtColor(frame,grayImage1,COLOR_BGR2GRAY);
+		imshow("BGR to Gray", grayImage1);
+		//GaussianBlur(grayImage1, grayImage1, Size(15,15), 0, 0, BORDER_DEFAULT );
+		//sobel 
+	
+		Sobel( grayImage1, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+		convertScaleAbs( grad_x, abs_grad_x );
+		Sobel( grayImage1, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
+		convertScaleAbs( grad_y, abs_grad_y );
+		addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+		cv::imshow("Sobel Image", grad); 
 
-        bg.operator()(frame,fore);
-		imshow("fore",fore);
-		
-		
-        //erode(fore,fore,Mat());
-        //dilate(fore,fore,Mat());
-        findContours(fore,contours,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE);
-		for( int i = 0; i< contours.size(); i++ )
-		{
-         cv::drawContours(fore, contours, i, Scalar(255, 255, 255), 1);
+		//getting pedestrian out
+		findContours(grad,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
+		// remove very small contours
+		vector<vector<Point> > contours_poly( contours.size() );
+		vector<Rect> boundRect( contours.size() );
+
+		if (hierarchy.size() > 0) {
+			for (int index = 0; index >= 0; index = hierarchy[index][0]) {
+
+				cout << "\n Countour area: " << contourArea(contours[index]);
 		}
-		//imshow("fore dilated",fore);
-        vector<vector<Point> > contours_poly(contours.size());
-		vector<Rect> boundRect(contours.size());
-        
-        for(size_t i = 0; i < contours.size(); i++ )
-		{
-			approxPolyDP( Mat(contours[i]), contours_poly[i], 10, true );
-			boundRect[i] = boundingRect( Mat(contours_poly[i]) );
-			//rectangle( fgimg, boundRect[i].tl(), boundRect[i].br(), Scalar(255,0,0), 2, 8, 0 );
-            
-			vehicle_ROI = fgimg(boundRect[i]);
-            area = contourArea(contours[i], false);
-            ar = vehicle_ROI.cols/vehicle_ROI.rows;
-            if(area > 450.0 && ar > 0.8)
-            {
-				rectangle( fgimg, boundRect[i].tl(), boundRect[i].br(), Scalar(255,0,0), 2, 8, 0 );
-                count=count+1;
-            }
-        }
-		
-		for( int i = 0; i< contours.size(); i++ )
-		{
-         cv::drawContours(fgimg, contours, i, Scalar(255, 255, 255), 1);
-		}
-		imshow("frame Rect",fgimg);
-		printf("Count: %d\n", count);
-        stringstream ss;
-        ss << count;
-        string s = ss.str();
-        int fontFace = FONT_HERSHEY_SCRIPT_SIMPLEX;
-        double fontScale = 2;
-        int thickness = 3;
-        cv::Point textOrg(10, 130);
-        cv::putText(frame, s, textOrg, fontFace, fontScale, Scalar(0,255,0), thickness,5);
        
-        int win_size = 10;
-        int maxCorners = 200;
-        double qualityLevel = 0.01;
-        double minDistance = 1;
-        int blockSize = 3;
-        double k = 0.04;
-        vector<Point2f> img_corners;
-        img_corners.reserve(maxCorners);
-        vector<Point2f> prevImg_corners;
-        prevImg_corners.reserve(maxCorners);
-
-       //goodFeaturesToTrack(fgimg, img_corners, maxCorners,qualityLevel,minDistance,Mat(),blockSize,true);
-
-        /*cornerSubPix( fgimg, img_corners, Size( win_size, win_size ), Size( -1, -1 ),
-                     TermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.03 ) );
-        
-        vector<uchar> features_found;
-        features_found.reserve(maxCorners);
-        vector<float> feature_errors;
-        feature_errors.reserve(maxCorners);
-        
-       calcOpticalFlowPyrLK( fgimg, prevImg, img_corners, prevImg_corners, features_found, feature_errors ,
-                             Size( win_size, win_size ), 3,
-                             cvTermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.3 ), 0, k);
-        
-        for( int i=0; i < features_found.size(); i++ ){
-
-            Point2f p0( ceil( img_corners[i].x ), ceil( img_corners[i].y ) );
-            Point2f p1( ceil( prevImg_corners[i].x ), ceil( prevImg_corners[i].y ) );
-            line( frame, p0, p1, CV_RGB(255,0,0), 5 );
-        }*/
+      // calcOpticalFlowPyrLK( fgimg, prevImg, img_corners, prevImg_corners, features_found, feature_errors ,
+                             //Size( win_size, win_size ), 3,
+                             //cvTermCriteria( CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.3 ), 0, k);
+         imshow("Frame",frame);
+      
+  
 		bool pause= false;
         switch(waitKey(100/fps)){
 				case 27: //'esc' key has been pressed, exit program.
@@ -151,13 +102,11 @@ int main()
 				}
 			}
 		}
-		
+	}
         //prevImg = img;
-        prevImg = frame;
-        imshow("Frame",frame);
+       // prevImg = frame;
+       
         
-        if(waitKey(5) >= 0)
-            break;
-    }
+      
     
 }
