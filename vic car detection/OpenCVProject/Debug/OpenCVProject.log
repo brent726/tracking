@@ -1,4 +1,4 @@
-﻿Build started 2/27/2017 7:18:54 PM.
+﻿Build started 3/3/2017 8:03:32 PM.
      1>Project "C:\Users\PCBLAB_01\Desktop\tracking\vic car detection\OpenCVProject\OpenCVProject.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\OpenCVProject 3.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -8,10 +8,9 @@
          OpenCVProject.cpp
      1>c:\opencv\build\include\opencv2\flann\logger.h(66): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234) : see declaration of 'fopen'
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(95): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(129): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(31): warning C4101: 'ar' : unreferenced local variable
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(31): warning C4101: 'area' : unreferenced local variable
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(194): warning C4101: 'ar' : unreferenced local variable
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(193): warning C4101: 'count' : unreferenced local variable
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(194): warning C4101: 'area' : unreferenced local variable
        ManifestResourceCompile:
          All outputs are up-to-date.
        Link:
@@ -32,4 +31,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:06.53
+Time Elapsed 00:00:06.23
