@@ -138,35 +138,43 @@ Mat get_Sum9_Mat(Mat &m){
     }
     return res;
 }
-void getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat &u, Mat &v){
+Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat &u, Mat &v){
 
      Mat fx = get_fx(img1, img2);
      Mat fy = get_fy(img1, img2);
      Mat ft = get_ft(img1, img2);
 
 	 Mat fx2 = fx.mul(fx);
-
-
+	 imshow("fx2",fx2);
+	 int dilate_size = 2;  
+     Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
+	 dilate(fx,fx,dilateElement); 
+	 imshow("dilate lines fx",fx);
      Mat fy2 = fy.mul(fy);
 	 imshow("fy2",fy2);
      Mat fxfy = fx.mul(fy);
-	 imshow("fy2",fy2);
+	 imshow("fxfy",fxfy);
      Mat fxft = fx.mul(ft);
 	 imshow("fxft",fxft);
-     Mat fyft = fy.mul(ft);
-	 imshow("fyft",fyft);
 
-	 Mat sumfx2 = get_Sum9_Mat(fx2);
-	 //imshow("sumfx2",sumfx2);
+     dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
+	 dilate(fxft,fxft,dilateElement); 
+	 imshow("dilate lines fxft",fxft);
+    /* Mat fyft = fy.mul(ft);
+	 imshow("fyft",fyft);*/
+
+	 /*Mat sumfx2 = get_Sum9_Mat(fx2);
+	 imshow("sumfx2",sumfx2);
 	 Mat sumfy2 = get_Sum9_Mat(fy2);
 	 imshow("sumfy2",sumfy2);
-	 /*Mat sumfxft = get_Sum9_Mat(fxft);
+	 Mat sumfxft = get_Sum9_Mat(fxft);
 	 imshow("sumfxft",sumfxft);
      Mat sumfxfy = get_Sum9_Mat(fxfy);
 	 imshow("sumfxfy",sumfxfy);
      Mat sumfyft = get_Sum9_Mat(fyft);
 
 	 Mat tmp = sumfx2.mul(sumfy2) - sumfxfy.mul(sumfxfy);
+	 imshow("tmp",tmp);
     u = sumfxfy.mul(sumfyft) - sumfy2.mul(sumfxft);
     v = sumfxft.mul(sumfxfy) - sumfx2.mul(sumfyft);
 	imshow("u",u);
@@ -177,6 +185,7 @@ void getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat &u, Mat &v){
 	
 //    saveMat(u, "U"); 
 //    saveMat(v, "V");   
+	 return fxft;
 }
 
 int main()
@@ -206,8 +215,8 @@ int main()
     //while(true)
     //{
 
-		Mat img1 = imread("car1.png");
-		Mat img2 = imread("10thFrame.png");	
+		Mat img1 = imread("stock1.png");
+		Mat img2 = imread("stock2.png");	
 		bool pause= false;
 
 		imshow("img1",img1);
