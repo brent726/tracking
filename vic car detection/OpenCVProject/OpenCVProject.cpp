@@ -1,6 +1,5 @@
-
-
-
+// Pyramid L-K optical flow example
+//
 
 #include "stdafx.h"
 #include "highgui.h"
@@ -9,264 +8,269 @@
 #include <vector>   
 #include <iostream>
 #include "Vehicle.h"
-#include "C:\opencv\build\include\opencv2\video\background_segm.hpp"
 
 using namespace std;
 using namespace cv;
+using namespace std;
 
-#define ATD at<double>
-#define elif else if
+static const int MAX_CORNERS = 1000;
 
-#ifndef bool
-	#define bool int
-	#define false ((bool)0)
-	#define true ((bool)1)
-#endif
+//default capture width and height
+const int FRAME_WIDTH = 1280;
+const int FRAME_HEIGHT = 720;
+//our sensitivity value to be used in the absdiff() function
+const static int SENSITIVITY_VALUE = 40;
+//size of blur used to smooth the intensity image output from absdiff() function
+const static int BLUR_SIZE = 3;
+//we'll have just one object to search for
+const int MAX_NUM_OBJECTS=50;
+const int MIN_OBJECT_AREA = 5*5;
 
-Mat get_fx(Mat &src1, Mat &src2)
-{
-	Mat fx;
-	Mat kernel= Mat::ones(2,2,CV_64FC1);
-	kernel.ATD(0,0)=-1.0;
-	kernel.ATD(1, 0) = -1.0;
+const int MAX_OBJECT_AREA = 100*50;
+//bounding rectangle of the object, we will use the center of this as its position.
+Rect objectBoundingRectangle = Rect(0,0,0,0);
 
+//string
+int capnum = 0;
+char path[70];
+char path_gray[70];
 
-	Mat dst1, dst2;
-	filter2D(src1,dst1,-1,kernel);
-	filter2D(src2, dst2,-1, kernel );
-
-	fx=dst1+dst2;
-	//imshow("fx dst1",dst1);
-	//imshow("fx",fx);
-	return fx;
-
-}
-Mat get_fy(Mat &src1, Mat &src2){
-    Mat fy;
-    Mat kernel = Mat::ones(2, 2, CV_64FC1);
-    kernel.ATD(0, 0) = -1.0;
-    kernel.ATD(0, 1) = -1.0;
-
-    Mat dst1, dst2;
-    filter2D(src1, dst1, -1, kernel);
-    filter2D(src2, dst2, -1, kernel);
-	 
-    fy = dst1 + dst2;
-
-	//imshow("fy dst1",dst1);
-	//imshow("fy",fy);
-    return fy;
+void help( char** argv ) {
+  cout << "Call: " <<argv[0] <<" [image1] [image2]" << endl;
+  cout << "Demonstrates Pyramid Lucas-Kanade optical flow." << endl;
 }
 
-Mat get_ft(Mat &src1, Mat &src2){
-    Mat ft;
-    Mat kernel = Mat::ones(2, 2, CV_64FC1);
-    kernel = kernel.mul(-1);
+//int to string helper function
+string intToString(int number){
 
-    Mat dst1, dst2;
-    filter2D(src1, dst1, -1, kernel);
-    kernel = kernel.mul(-1);
-    filter2D(src2, dst2, -1, kernel);
-
-    ft = dst1 + dst2;
-	//imshow("ft dst1",dst1);
-	//imshow("ft dst2",dst2);
-	//imshow("ft",ft);
-    return ft;
+	//this function has a number input and string output
+	std::stringstream ss;
+	ss << number;
+	return ss.str();
 }
 
-bool isInsideImage(int y, int x, Mat &m){
-    int width = m.cols;
-    int height = m.rows;
-    if(x >= 0 && x < width && y >= 0 && y < height) return true;
-    else return false;
-}
+void drawObject(vector<Vehicle> VehicleCars,Mat &frame){
 
-double get_Sum9(Mat &m, int y, int x)
-{
-	if(x < 0 || x >= m.cols) return 0;
-    if(y < 0 || y >= m.rows) return 0;
-
-	double val=0.0;
-	int tmp=0;
-	if(isInsideImage(y-1,x-1,m))
-	{
-		++tmp;
-		val+=m.ATD(y-1,x-1);
+	for(int i =0; i<VehicleCars.size(); i++){
+	//cv::circle(frame,cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()),20,cv::Scalar(0,255,0));
+		rectangle( frame, VehicleCars.at(i).getTl(), VehicleCars.at(i).getBr(), cv::Scalar(0,255,0), 2, 8, 0 );
+	//location of the object
+	//cv::putText(frame,intToString(VehicleCars.at(i).getXPos())+ " , " + intToString(VehicleCars.at(i).getYPos()),cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()+20),1,1,Scalar(0,255,0));
+	//cv::putText(frame,intToString(VehicleCars.at(i).getID()),cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()+20),1,1,Scalar(0,255,0));
 	}
-	if(isInsideImage(y - 1, x, m)){
-        ++ tmp;
-        val += m.ATD(y - 1, x);
-    }
-	 if(isInsideImage(y - 1, x + 1, m)){
-        ++ tmp;
-        val += m.ATD(y - 1, x + 1);
-    }
-    if(isInsideImage(y, x - 1, m)){
-        ++ tmp;
-        val += m.ATD(y, x - 1);
-    }
-    if(isInsideImage(y, x, m)){
-        ++ tmp;
-        val += m.ATD(y, x);
-    }
-    if(isInsideImage(y, x + 1, m)){
-        ++ tmp;
-        val += m.ATD(y, x + 1);
-    }
-    if(isInsideImage(y + 1, x - 1, m)){
-        ++ tmp;
-        val += m.ATD(y + 1, x - 1);
-    }
-    if(isInsideImage(y + 1, x, m)){
-        ++ tmp;
-        val += m.ATD(y + 1, x);
-    }
-    if(isInsideImage(y + 1, x + 1, m)){
-        ++ tmp;
-        val += m.ATD(y + 1, x + 1);
-    }
-    if(tmp == 9) return val;
-    else return m.ATD(y, x) * 9;
+	cv::putText(frame,"Number of Vehicles: "+intToString(VehicleCars.size()),cv::Point(20,20),1,1,Scalar(0,255,0));
+	//printf("Number of Vehicles : %d",VehicleCars.size());
 }
-Mat get_Sum9_Mat(Mat &m){
-    Mat res = Mat::zeros(m.rows, m.cols, CV_64FC1);
-    for(int i = 1; i < m.rows - 1; i++){
-        for(int j = 1; j < m.cols - 1; j++){
-            res.ATD(i, j) = get_Sum9(m, i, j);
-        }
-    }
-    return res;
-}
-Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat &u, Mat &v){
 
-     Mat fx = get_fx(img1, img2);
-     Mat fy = get_fy(img1, img2);
-     Mat ft = get_ft(img1, img2);
-
-	 Mat fx2 = fx.mul(fx);
-	 imshow("fx2",fx2);
-	 int dilate_size = 2;  
-     Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
-	 dilate(fx,fx,dilateElement); 
-	 imshow("dilate lines fx",fx);
-     Mat fy2 = fy.mul(fy);
-	 imshow("fy2",fy2);
-     Mat fxfy = fx.mul(fy);
-	 imshow("fxfy",fxfy);
-     Mat fxft = fx.mul(ft);
-	 imshow("fxft",fxft);
-
-     dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
-	 dilate(fxft,fxft,dilateElement); 
-	 imshow("dilate lines fxft",fxft);
-    /* Mat fyft = fy.mul(ft);
-	 imshow("fyft",fyft);*/
-
-	 /*Mat sumfx2 = get_Sum9_Mat(fx2);
-	 imshow("sumfx2",sumfx2);
-	 Mat sumfy2 = get_Sum9_Mat(fy2);
-	 imshow("sumfy2",sumfy2);
-	 Mat sumfxft = get_Sum9_Mat(fxft);
-	 imshow("sumfxft",sumfxft);
-     Mat sumfxfy = get_Sum9_Mat(fxfy);
-	 imshow("sumfxfy",sumfxfy);
-     Mat sumfyft = get_Sum9_Mat(fyft);
-
-	 Mat tmp = sumfx2.mul(sumfy2) - sumfxfy.mul(sumfxfy);
-	 imshow("tmp",tmp);
-    u = sumfxfy.mul(sumfyft) - sumfy2.mul(sumfxft);
-    v = sumfxft.mul(sumfxfy) - sumfx2.mul(sumfyft);
-	imshow("u",u);
-	imshow("v",v);
-    divide(u, tmp, u);
-    divide(v, tmp, v);*/
-
+void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 	
-//    saveMat(u, "U"); 
-//    saveMat(v, "V");   
-	 return fxft;
-}
+	vector<Vehicle> vehicles;
 
-int main()
-{
-	//their grayscale images (needed for absdiff() function)
-	Mat grayImage1,grayImage2;
-	//sobel parameters
-	Mat grad;
-	int ddepth = CV_16S;
-	int scale = 1;
-	int delta = 0;
-	Mat grad_x, grad_y;
-	Mat abs_grad_x, abs_grad_y;
-    int count;
-  	double area, ar;
+	//eg. we draw to the cameraFeed to be displayed in the main() function.
+	bool objectDetected = false;
+	Mat temp;
+	thresholdImage.copyTo(temp);
+	//these two vectors needed for output of findContours
+	vector< vector<Point> > contours;
 	vector<Vec4i> hierarchy;
-    Mat frame, img, prevImg, temp, gray, vehicle_ROI, img_temp;
-   // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\60m.mp4");
-	//VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
-	//VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\60m.mp4");
-    //vector<vector<Point> > contours;
-    //vector<Rect> cars;
-    //namedWindow("Frame");
-    
-	//double fps = cap.get(CV_CAP_PROP_FPS);
+	//find contours of filtered image using openCV findContours function
+	//findContours(temp,contours,hierarchy,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE );// retrieves all contours
+	//findContours(temp,contours,hierarchy,RETR_TREE,CV_CHAIN_APPROX_SIMPLE );// retrieves all contours tree
+	findContours(temp,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
+	// remove very small contours
+	vector<vector<Point> > contours_poly( contours.size() );
+	vector<Rect> boundRect( contours.size() );
 
-    //while(true)
-    //{
-
-		Mat img1 = imread("stock1.png");
-		Mat img2 = imread("stock2.png");	
-		bool pause= false;
-
-		imshow("img1",img1);
-		imshow("img2",img2);
-
-		//convert to 1 channel 64 bit
-		img1.convertTo(img1, CV_64FC1, 1.0/255, 0);
-		img2.convertTo(img2, CV_64FC1, 1.0/255, 0);
-
-		imshow("CV_64FC1 img1",img1);
-		imshow("CV_64FC1 img2",img2);
+	//if contours vector is not empty, we have found some objects
+	double refArea = 0;
+	if (hierarchy.size() > 0) {
 		
-		//make empty images
-		Mat u = Mat::zeros(img1.rows, img1.cols, CV_64FC1);
-		Mat v = Mat::zeros(img1.rows, img1.cols, CV_64FC1);
+			for (int index = 0; index >= 0; index = hierarchy[index][0]) {
 
-		 getLucasKanadeOpticalFlow(img1, img2, u, v);
+				cout << "\n Countour area: " << contourArea(contours[index]);
+				
+				Moments moment = moments((cv::Mat)contours[index]);
+				double area = moment.m00;
 
-		waitKey();
-       /* switch(waitKey(100/fps)){
-				case 27: //'esc' key has been pressed, exit program.
-				return 0;
+				//if the area is less than 20 px by 20px then it is probably just noise
+				//if the area is the same as the 3/2 of the image size, probably just a bad filter
+				//we only want the object with the largest area so we safe a reference area each
+				//iteration and compare it to the area in the next iteration.
+				if(area>MIN_OBJECT_AREA){
+					printf("  ID : %d Area: %lf",index,area);
 
-			
-				case 112: //'p' has been pressed. this will pause/resume the code.
-				pause = !pause;
-				if(pause == true){ cout<<"Code paused, press 'p' again to resume"<<endl;
-				while (pause == true){
-					//stay in this loop until 
-					switch (waitKey()){
-						//a switch statement inside a switch statement? Mind blown.
-					case 112: 
-						//change pause back to false
-						pause = false;
-						cout<<"Code Resumed"<<endl;
-						break;
-					case 115:
-						//screen capture
-						//imwrite( "E:/capturedimage1.jpg", frame1 );
-						cout<<"Capture Image"<<endl;
-						break;
+					approxPolyDP( Mat(contours[index]), contours_poly[index], 3, true );
+					boundRect[index] = boundingRect( Mat(contours_poly[index]) );
+
+					int width =  boundRect[index].width;
+					int height = boundRect[index].height;
+
+					cout << " Width: " << width;
+					cout << " Height: " << height;
+					printf("\n");
+
+					if(width>50 && width <140 && height>30 && height<50)
+					{
+					Vehicle car;
+					
+					car.setXPos(moment.m10/area);
+					car.setYPos(moment.m01/area);
+					car.setID(index);
+					car.setBr(boundRect[index].br());
+					car.setTl(boundRect[index].tl());
+
+					vehicles.push_back(car);
 					}
 				}
 			}
-		}*/
-	//}
-       
-       
-       
-        
-      
-    
+			//draw object location on screen
+			drawObject(vehicles,cameraFeed);
+	}
+
 }
+int main(int argc, char** argv) {
+
+  //if( argc != 3 ) { help( argv ); exit( -1 ); }
+
+  // Initialize, load two images from the file system, and
+  // allocate the images and other structures we will need for
+  // results.
+  //
+  Mat imgA = imread( "stock3.png");
+  Mat imgAOrig=imgA.clone();
+  
+  Mat imgB = imread( "stock4.png");
+  
+  Size img_sz = imgA.size();
+
+  int win_size = 10;
+  Mat imgResultA = imgA.clone();
+  Mat imgResultB= imgB.clone();
+  cvtColor(imgA, imgA, COLOR_BGR2GRAY); 
+  cvtColor(imgB, imgB, COLOR_BGR2GRAY); 
+  // The first thing we need to do is get the features
+  // we want to track.
+  //
+  vector<Point2f > cornersA, cornersB;
+  const int MAX_CORNERS = 500;
+  cv::goodFeaturesToTrack(
+    imgA,                         // Image to track
+    cornersA,                     // Vector of detected corners (output)
+    MAX_CORNERS,                  // Keep up to this many corners
+    0.01,                         // Quality level (percent of maximum)
+    5,                            // Min distance between corners
+    noArray(),                // Mask
+    3,                            // Block size
+    false,                        // true: Harris, false: Shi-Tomasi
+    0.04                          // method specific parameter
+  );
+
+  cornerSubPix(
+    imgA,                         // Input image
+    cornersA,                     // Vector of corners (input and output)
+    Size(win_size, win_size), // Half side length of search window
+    Size(-1,-1),              // Half side length of dead zone (-1=none)
+    TermCriteria(
+      TermCriteria::MAX_ITER | cv::TermCriteria::EPS,
+      20,                         // Maximum number of iterations
+      0.03                        // Minimum change per iteration
+    )
+  );
+
+  // Call the Lucas Kanade algorithm
+  //
+  vector<uchar> features_found;
+  cv::calcOpticalFlowPyrLK(
+    imgA,                         // Previous image
+    imgB,                         // Next image
+    cornersA,                     // Previous set of corners (from imgA)
+    cornersB,                     // Next set of corners (from imgB)
+    features_found,               // Output vector, each is 1 for tracked
+    cv::noArray(),                // Output vector, lists errors (optional)
+    cv::Size( win_size*2+1, win_size*2+1 ), // Search window size
+    5,                            // Maximum pyramid level to construct
+    cv::TermCriteria(
+      cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS,
+      20,                         // Maximum number of iterations
+      0.3                         // Minimum change per iteration
+    )
+  );
+
+
+  Mat binImageResultA(imgA.rows, imgA.cols, CV_8UC1, Scalar(0));
+  // Now make some image of what we are looking at:
+  // Note that if you want to track cornersB further, i.e.
+  // pass them as input to the next calcOpticalFlowPyrLK,
+  // you would need to "compress" the vector, i.e., exclude points for which
+  // features_found[i] == false.
+  for( int i = 0; i < (int)cornersA.size(); i++ ) {
+    if( !features_found[i] )
+      continue;
+    line(
+      //imgResultA,                        // Draw onto this image
+	  binImageResultA,
+	  cornersA[i],                 // Starting here
+      cornersB[i],                 // Ending here
+      cv::Scalar(255),        // This color
+	  2,                           // This many pixels wide
+      CV_AA                  // Draw line in this style
+      );
+	line(
+      imgResultB,                        // Draw onto this image
+      cornersA[i],                 // Starting here
+      cornersB[i],                 // Ending here
+      cv::Scalar(0,255,0),        // This color
+	  2,                           // This many pixels wide
+      CV_AA                  // Draw line in this style
+      );
+  }
+  cv::imshow( "LK Optical Flow result A", imgResultA);
+	//sobel parameters
+	Mat grad;
+	Mat grad_x, grad_y;
+	Mat abs_grad_x, abs_grad_y;
+	int scale = 1;
+	int delta = 0;
+	int ddepth = CV_16S;
+	Mat thresholdImage;
+
+    GaussianBlur(imgA, imgA, Size(13,13), 0, 0, BORDER_DEFAULT );
+	GaussianBlur(imgB, imgB, Size(13,13), 0, 0, BORDER_DEFAULT );
+	//sobel 
+	Sobel( imgA, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+	convertScaleAbs( grad_x, abs_grad_x );
+	Sobel( imgA, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
+	convertScaleAbs( grad_y, abs_grad_y );
+	addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+	cv::imshow("Sobel Image", grad);
+	cv::threshold(grad,thresholdImage,25,255,THRESH_BINARY);
+	cv::imshow("Threshold Image", thresholdImage);
+	//morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
+	//cv::imshow("Morphed Image", thresholdImage);
+	imgResultA=thresholdImage+binImageResultA;
+
+	  cv::imshow( "ImageA", imgA );
+	  cv::imshow( "ImageB", imgB );
+	  cv::imshow( "Combined LK Optical Flow + Sobel result A", imgResultA );
+	  cv::imshow( "LK Optical Flow result B", imgResultB );
+
+	  Mat frame1=imgAOrig.clone();
+	  Mat threshCpy=thresholdImage.clone();
+	  if(true)
+	   {
+
+		searchForVehicle(threshCpy,frame1);
+	   }
+	  imshow("sobel",frame1);
+	  frame1=imgAOrig;
+	  if(true)
+	   {
+
+		searchForVehicle(imgResultA,frame1);
+	  }
+	  imshow("output lk+sobel",frame1);
+	  cv::waitKey(0);
+
+  return 0;
+}
+
