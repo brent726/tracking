@@ -309,12 +309,13 @@ int main(int argc, char** argv) {
   bool pause=false;
  
   Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
-  VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
+  ///VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
+  VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\Thesis\\sampleVideo.avi");
   double fps = cap.get(CV_CAP_PROP_FPS);
   int framepos;
   Size img_sz;
   Mat frameCurOrig;
-  Mat gray;
+  //Mat gray;
   while(true)
   {
 	      
@@ -323,18 +324,18 @@ int main(int argc, char** argv) {
 		  framepos=(int)cap.get(CV_CAP_PROP_POS_FRAMES);
 		  curResultFrame = curFrame.clone();
 		  
-		  cvtColor( curFrame, gray, COLOR_BGR2GRAY); 
-		 //curFrame.convertTo(curFrame, CV_64FC1, 1.0/255.0);
+		  //cvtColor( curFrame, gray, COLOR_BGR2GRAY); 
+		 curFrame.convertTo(curFrame, CV_64FC1, 1.0/255.0);
 		
 		//prevFrame.convertTo(prevFrame, CV_64FC1, 1.0/255.0, 0);
 		 //curFrame.convertTo(curFrame, CV_8U, 1.0/255, 0);
-		 imshow("gray",gray);
-		 int i,j;
-				  for(i=0;i<gray.rows;i++)
+		//imshow("gray", gray);
+		int i,j;
+				  for(i=0;i<curFrame.rows;i++)
 				  {
-					for(j=0;j<gray.cols;j++)
+					for(j=0;j<curFrame.cols;j++)
 					{
-						printf("curframe: %f",gray.at<int>(i,j));
+						printf("curframe: %d",curFrame.at<uchar>(j,i));
 						
 					}
 				 }
@@ -372,7 +373,7 @@ int main(int argc, char** argv) {
 			  
 			  //prevFrame=curFrame;
 			 // system("PAUSE");
-			 /* pause=false;
+			  pause=false;
 			  switch(waitKey(100/fps)){
 				case 27: //'esc' key has been pressed, exit program.
 				return 0;
@@ -396,7 +397,7 @@ int main(int argc, char** argv) {
 						}
 				  }
 				}
-			  }*/
+			  }
 			  //cv::waitKey(0);
   }
   return 0;
