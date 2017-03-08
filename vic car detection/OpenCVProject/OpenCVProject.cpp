@@ -48,7 +48,7 @@ Mat get_fx(Mat &src1, Mat &src2)
 {
 	Mat fx;
 	Mat kernel= Mat::ones(2,2,CV_64FC1);
-	
+	//Mat kernel= Mat::ones(2,2,CV_8U);
 	kernel.ATD(0,0)=-1.0;
 	kernel.ATD(1, 0) = -1.0;
 
@@ -66,7 +66,7 @@ Mat get_fx(Mat &src1, Mat &src2)
 Mat get_fy(Mat &src1, Mat &src2){
     Mat fy;
     Mat kernel = Mat::ones(2, 2, CV_64FC1);
-	
+	//Mat kernel = Mat::ones(2, 2, CV_8U);
     kernel.ATD(0, 0) = -1.0;
     kernel.ATD(0, 1) = -1.0;
 
@@ -84,6 +84,7 @@ Mat get_fy(Mat &src1, Mat &src2){
 Mat get_ft(Mat &src1, Mat &src2){
     Mat ft;
     Mat kernel = Mat::ones(2, 2, CV_64FC1);
+	//Mat kernel = Mat::ones(2, 2, CV_8U);
     kernel = kernel.mul(-1);
 
     Mat dst1, dst2;
@@ -153,6 +154,7 @@ double get_Sum9(Mat &m, int y, int x)
 }
 Mat get_Sum9_Mat(Mat &m){
    Mat res = Mat::zeros(m.rows, m.cols, CV_64FC1);
+   //Mat res = Mat::zeros(m.rows, m.cols, CV_8U);
     for(int i = 1; i < m.rows - 1; i++){
         for(int j = 1; j < m.cols - 1; j++){
             res.ATD(i, j) = get_Sum9(m, i, j);
@@ -161,27 +163,27 @@ Mat get_Sum9_Mat(Mat &m){
     return res;
 }
 Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat &u, Mat &v){
-
-     Mat fx = get_fx(img1, img2);
+	
+    Mat fx = get_fx(img1, img2);
      Mat fy = get_fy(img1, img2);
      Mat ft = get_ft(img1, img2);
-	 imshow("fx",fx);
-	 Mat fx2 = fx.mul(fx);
-	 imshow("fx2",fx2);
+	 //imshow("fx",fx);
+	Mat fx2 = fx.mul(fx);
+	 //imshow("fx2",fx2);
 	 int dilate_size = 3;  
      Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
-	 //dilate(fx,fx,dilateElement); 
-	 //imshow("dilate lines fx",fx);
-     Mat fy2 = fy.mul(fy);
+	 dilate(fx,fx,dilateElement); 
+	 imshow("dilate lines fx",fx);
+     //Mat fy2 = fy.mul(fy);
 	 //imshow("fy2",fy2);
-     Mat fxfy = fx.mul(fy);
+     //Mat fxfy = fx.mul(fy);
 	 //imshow("fxfy",fxfy);
-     Mat fxft = fx.mul(ft);
-	 imshow("fxft",fxft);
+     //Mat fxft = fx.mul(ft);
+	 //imshow("fxft",fxft);
 
-     dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
-	 dilate(fxft,fxft,dilateElement); 
-	 imshow("dilate lines fxft",fxft);
+     //dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
+	 //dilate(fxft,fxft,dilateElement); 
+	 //imshow("dilate lines fxft",fxft);
     /* Mat fyft = fy.mul(ft);
 	 imshow("fyft",fyft);*/
 
@@ -203,7 +205,7 @@ Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat &u, Mat &v){
 	imshow("v",v);
     divide(u, tmp, u);
     divide(v, tmp, v);*/
-	 return fxft;
+	 return fx;
 }
 //int to string helper function
 string intToString(int number){
@@ -309,13 +311,14 @@ int main(int argc, char** argv) {
   bool pause=false;
  
   Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
-  ///VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
-  VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\Thesis\\sampleVideo.avi");
+  VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
+ // VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\Thesis\\sampleVideo.avi");
   double fps = cap.get(CV_CAP_PROP_FPS);
   int framepos;
   Size img_sz;
   Mat frameCurOrig;
-  //Mat gray;
+  int i,j;
+  Mat gray;
   while(true)
   {
 	      
@@ -324,35 +327,42 @@ int main(int argc, char** argv) {
 		  framepos=(int)cap.get(CV_CAP_PROP_POS_FRAMES);
 		  curResultFrame = curFrame.clone();
 		  
-		  //cvtColor( curFrame, gray, COLOR_BGR2GRAY); 
-		 curFrame.convertTo(curFrame, CV_64FC1, 1.0/255.0);
-		
-		//prevFrame.convertTo(prevFrame, CV_64FC1, 1.0/255.0, 0);
-		 //curFrame.convertTo(curFrame, CV_8U, 1.0/255, 0);
-		//imshow("gray", gray);
-		int i,j;
-				  for(i=0;i<curFrame.rows;i++)
-				  {
-					for(j=0;j<curFrame.cols;j++)
-					{
-						printf("curframe: %d",curFrame.at<uchar>(j,i));
-						
-					}
-				 }
-		  /*if(framepos!=1)
+		  //cvtColor( curFrame, curFrame, COLOR_BGR2GRAY); 
+	
+		  curFrame.convertTo(curFrame, CV_64FC1, 1.0/255);
+
+		  if(!curFrame.empty())
 		  {
+			 //curFrame.convertTo(curFrame, CV_64FC1,1.0/255);
+		
+			//prevFrame.convertTo(prevFrame, CV_64FC1, 1.0/255.0, 0);
+			 //curFrame.convertTo(curFrame, CV_8U, 1.0/255, 0);
+			imshow("gray", curFrame);
+			
+					  /*for(i=0;i<curFrame.rows;i++)
+					  {
+						for(j=0;j<curFrame.cols;j++)
+						{
+							printf("curframe: %d",curFrame.ATD(i,j));
+						
+						}
+					 }*/
+		  }
+		if(framepos!=1)
+		 {
 				 
-				  img_sz = curFrame.size();
+				 img_sz = curFrame.size();
 				  
 				//imshow("curFrame",curFrame);
-				Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				//Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
-				//Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
+				//Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
+				//Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
+				Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
+				Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
 
 				Mat LKResultImage=getLucasKanadeOpticalFlow(prevFrame, curFrame, u, v);
 				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
+				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
+				/*Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
 				printf("rows:%d cols: %d",curFrame.rows,curFrame.cols);
 				for(i=0;i<curFrame.rows;i++)
 				{
@@ -365,13 +375,13 @@ int main(int argc, char** argv) {
 							bwLKResult.ATD(i,j)=255;
 						}
 					}
-				}
+				}*/
 				
-				imshow("bw",bwLKResult);
-		  }*/
+				//imshow("bw",bwLKResult);
+		  }
 		 
 			  
-			  //prevFrame=curFrame;
+			 // prevFrame=curFrame;
 			 // system("PAUSE");
 			  pause=false;
 			  switch(waitKey(100/fps)){
