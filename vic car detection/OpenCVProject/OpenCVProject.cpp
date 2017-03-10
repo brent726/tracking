@@ -184,11 +184,11 @@ Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat &u, Mat &v){
      //Mat fxfy = fx.mul(fy);
 	 //imshow("fxfy",fxfy);
      Mat fxft = fx.mul(ft);
-	 imshow("fxft",fxft);
+	 //imshow("fxft",fxft);
 	 
     Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
 	dilate(fxft,fxft,dilateElement); 
-	 imshow("dilate lines fxft",fxft);
+   imshow("dilate lines fxft",fxft);
      /*Mat fyft = fy.mul(ft);
 	 imshow("fyft",fyft);*/
 
@@ -301,159 +301,25 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 	}
 
 }
-int main(int argc, char** argv) {
-
-  //if( argc != 3 ) { help( argv ); exit( -1 ); }
-
-  // Initialize, load two images from the file system, and
-  // allocate the images and other structures we will need for
-  // results.
-  //
-  //Mat imgA = imread( "newStock2.png");
-  //Mat imgAOrig=imgA.clone();
-  
-  //Mat imgB = imread( "newStock1.png");
-  bool pause=false;
- 
-  Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
-  //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
-  //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
- VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\Thesis\\sampleVideo.avi");
-  double fps = cap.get(CV_CAP_PROP_FPS);
-  int framepos;
-  Size img_sz;
-  Mat frameCurOrig;
-  int i,j;
-  Mat gray;
-  Mat thresholdImage, contours, contours_poly;
-  
-  while(true)
-  {
-	      
-		  cap >> curFrame;
-		  frameCurOrig=curFrame.clone();
-		  framepos=(int)cap.get(CV_CAP_PROP_POS_FRAMES);
-		  curResultFrame = curFrame.clone();
-		  
-		 cvtColor( curFrame, curFrame, COLOR_BGR2GRAY); 
-	
-		  //curFrame.convertTo(curFrame, CV_64FC1, 1.0/255);
-		  curFrame.convertTo(curFrame, CV_64F, 1.0/255);
-		  if(!curFrame.empty())
-		  {
-			 //curFrame.convertTo(curFrame, CV_64FC1,1.0/255);
-		
-			//prevFrame.convertTo(prevFrame, CV_64FC1, 1.0/255.0, 0);
-			 //curFrame.convertTo(curFrame, CV_8U, 1.0/255, 0);
-			imshow("gray", curFrame);
-			
-		  }
-		if(framepos!=1)
-		 {
-				 
-				 img_sz = curFrame.size();
-				  
-				//imshow("curFrame",curFrame);
-				//Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				//Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
-				Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
-
-				/***************LK**********************/
-				Mat grayLK;
-				 double  minVal,  maxVal;
-				
-				Mat LKResultImage=getLucasKanadeOpticalFlow(prevFrame, curFrame, u, v);
-				minMaxLoc(LKResultImage,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
-				LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
-				// imshow("gray LK",grayLK);
-				 cv::threshold(grayLK,thresholdImage,20,255,THRESH_BINARY);
-				 //cv::imshow("LK Threshold Image", thresholdImage);
-				 morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
-				//cv::imshow("LK Morph Image", thresholdImage);
-				Mat frameLK=frameCurOrig.clone();
-				//Mat frameLK=prevFrame.clone();
-				 Mat temp;
-				thresholdImage.copyTo(temp);
-				//these two vectors needed for output of findContours
-				vector< vector<Point> > contours;
-				vector<Vec4i> hierarchy;
-				//find contours of filtered image using openCV findContours function
-				//findContours(temp,contours,hierarchy,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE );// retrieves all contours
-				//findContours(temp,contours,hierarchy,RETR_TREE,CV_CHAIN_APPROX_SIMPLE );// retrieves all contours tree
-				findContours(temp,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
-				  /// Approximate contours to polygons + get bounding rects and circles
-			  vector<vector<Point> > contours_poly( contours.size() );
-			  vector<Rect> boundRect( contours.size() );
-				  for( i = 0; i < contours.size(); i++ )
-				 { approxPolyDP( contours[i], contours_poly[i], 3, true );
-				   boundRect[i] = boundingRect( contours_poly[i]);
-				 }
-
-				
-
-			    for( i = 0; i< contours.size(); i++ )
-				{
-				   //drawContours( temp, contours_poly[i], i, Scalar(255), 1, 8, vector<Vec4i>(), 0, Point() );
-				   //rectangle( frameLK, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
-				   //drawContours( dstImg, contours,i, Scalar(255, 255, 255), CV_FILLED);	
-				   rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), CV_FILLED);
-				   //circle( drawing, center[i], (int)radius[i], color, 2, 8, 0 );
-				}
-				int dilate_size=2;
-				Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
-				for(i=0;i<1;i++)
-				{
-					//dilate(temp,temp,dilateElement); 
-					morphologyEx(temp,temp,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
-				}
-				dilate(temp,temp,dilateElement); 
-				findContours(temp,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
-				for( i = 0; i < contours.size(); i++ )
-				 { approxPolyDP( contours[i], contours_poly[i], 3, true );
-				   boundRect[i] = boundingRect( Mat(contours_poly[i]) );
-				 }
-				 for( i = 0; i< contours.size(); i++ )
-				{
-				   //drawContours( temp, contours_poly[i], i, Scalar(255), 1, 8, vector<Vec4i>(), 0, Point() );
-				   //rectangle( frameLK, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
-				   //drawContours( dstImg, contours,i, Scalar(255, 255, 255), CV_FILLED);	
-				   //rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), CV_FILLED);
-				   //circle( drawing, center[i], (int)radius[i], color, 2, 8, 0 );
-				}
-				 findContours(temp,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
-				 for( i = 0; i< contours.size(); i++ )
-				{
-				   //drawContours( temp, contours_poly[i], i, Scalar(255), 1, 8, vector<Vec4i>(), 0, Point() );
-				   rectangle( frameLK, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
-				   //drawContours( dstImg, contours,i, Scalar(255, 255, 255), CV_FILLED);	
-				   rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2,8,0);
-				   //circle( drawing, center[i], (int)radius[i], color, 2, 8, 0 );
-				}
-				//imshow("rect LK",frameLK);
-				imshow("rect bw",temp);
-				Mat LKFrame=frameCurOrig.clone();
-				if(true)
-				{
-
-					searchForVehicle(temp,LKFrame);
-				}
-				imshow("frame LK",LKFrame);
-				
-				//imshow("LK",frameLK);
-				/**********LK*************/
-
-				//sobel parameters
+Mat sobelDetection(Mat curFrame)
+{
+	//sobel parameters
+				Mat gray;
+				int i,j;
 				Mat grad;
 				Mat grad_x, grad_y;
 				Mat abs_grad_x, abs_grad_y;
 				int scale = 1;
 				int delta = 0;
 				int ddepth = CV_16S;
-				
-				Mat sobelResult=frameCurOrig.clone();
-
-
+				Mat frameCurOrig=curFrame.clone();
+				Mat sobelResult=curFrame.clone();
+				Mat thresholdImage;
+				vector< vector<Point> > contours;
+				vector<Vec4i> hierarchy;
+				//find contours of filtered image using openCV findContours function
+			    vector<vector<Point> > contours_poly( contours.size() );
+			    vector<Rect> boundRect( contours.size() );
 				
 				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
 				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
@@ -470,29 +336,30 @@ int main(int argc, char** argv) {
 				//cv::imshow("Sobel Image", grad);
 				cv::threshold(grad,thresholdImage,25,255,THRESH_BINARY);
 				cv::imshow("Threshold Image", thresholdImage);
-				morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
-				cv::imshow("Sobel Morphed Image", thresholdImage);
-
-				 findContours(thresholdImage,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
+				//morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
+				//cv::imshow("Sobel Morphed Image", thresholdImage);
+		
+				 
+			
+				//find contours of filtered image using openCV findContours function
+				findContours(thresholdImage,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
+				  /// Approximate contours to polygons + get bounding rects and circles
 				 for( i = 0; i < contours.size(); i++ )
-				 { //approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
-				   //boundRect[i] = boundingRect( Mat(contours_poly[i]) );
+				 {		approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+						//boundRect[i] = boundingRect( Mat(contours_poly[i]) );
 				 }
 				 for( i = 0; i< contours.size(); i++ )
 				{
 				   //drawContours( temp, contours_poly[i], i, Scalar(255), 1, 8, vector<Vec4i>(), 0, Point() );
-				   //rectangle( sobelResult, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
+				  // rectangle( thresholdImage, boundRect[i].tl(), boundRect[i].br(), Scalar(255, 255, 255), CV_FILLED);
 				   //drawContours( dstImg, contours,i, Scalar(255, 255, 255), CV_FILLED);	
-				   //rectangle( thresholdImage, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2,8,0);
-				   //circle( drawing, center[i], (int)radius[i], color, 2, 8, 0 );
 				}
-				imshow("sobel threshold",thresholdImage);
 				if(true)
 				{
 
-					searchForVehicle(thresholdImage,sobelResult);
+					//searchForVehicle(thresholdImage,sobelResult);
 				}
-				imshow("sobel Result", sobelResult);
+				//imshow("sobelRect Result", thresholdImage);
 				//printf("rows:%d cols: %d",curFrame.rows,curFrame.cols);
 				/*for(i=0;i<LKResultImage.rows;i++)
 				{
@@ -508,6 +375,133 @@ int main(int argc, char** argv) {
 				}
 				
 				imshow("bw",bwLKResult);*/
+				return thresholdImage;
+
+}
+Mat LKDetection(Mat prevFrame, Mat curFrame)
+{
+				int i;
+				 Mat thresholdImage;
+				 Mat frameCurOrig;
+				Size img_sz = curFrame.size();
+				frameCurOrig=curFrame.clone(); 
+				//imshow("curFrame",curFrame);
+				//Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
+				//Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
+				Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
+				Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
+
+				/***************LK**********************/
+				Mat grayLK;
+				double  minVal,  maxVal;
+				
+				Mat LKResultImage=getLucasKanadeOpticalFlow(prevFrame, curFrame, u, v);
+				minMaxLoc(LKResultImage,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
+				LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
+				// imshow("gray LK",grayLK);
+				 cv::threshold(grayLK,thresholdImage,20,255,THRESH_BINARY);
+				 //cv::imshow("LK Threshold Image", thresholdImage);
+				 //morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
+				//cv::imshow("LK Morph Image", thresholdImage);
+				Mat frameLK=frameCurOrig.clone();
+				//Mat frameLK=prevFrame.clone();
+				 Mat temp;
+				thresholdImage.copyTo(temp);
+				//these two vectors needed for output of findContours
+				vector< vector<Point> > contours;
+				vector<Vec4i> hierarchy;
+				//find contours of filtered image using openCV findContours function
+				findContours(temp,contours, hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
+				  /// Approximate contours to polygons + get bounding rects and circles
+			  vector<vector<Point> > contours_poly( contours.size() );
+			  vector<Rect> boundRect( contours.size() );
+				  for( i = 0; i < contours.size(); i++ )
+				 { approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+					boundRect[i] = boundingRect( Mat(contours_poly[i]) );
+				 }
+
+			    for( i = 0; i< contours.size(); i++ )
+				{
+				   //drawContours( temp, contours_poly[i], i, Scalar(255), 1, 8, vector<Vec4i>(), 0, Point() );
+				   //rectangle( frameLK, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
+				   rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), CV_FILLED);
+				}
+				int dilate_size=2;
+				Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
+					//dilate(temp,temp,dilateElement); 
+					//morphologyEx(temp,temp,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
+
+				findContours(temp,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
+				for( i = 0; i < contours.size(); i++ )
+				 { approxPolyDP( contours[i], contours_poly[i], 3, true );
+				   boundRect[i] = boundingRect( Mat(contours_poly[i]) );
+				 }
+				 for( i = 0; i< contours.size(); i++ )
+				{
+				   //drawContours( temp, contours_poly[i], i, Scalar(255), 1, 8, vector<Vec4i>(), 0, Point() );
+				   rectangle( frameLK, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
+				   //drawContours( dstImg, contours,i, Scalar(255, 255, 255), CV_FILLED);	
+				   rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2,8,0);
+				   //circle( drawing, center[i], (int)radius[i], color, 2, 8, 0 );
+				}
+				//imshow("rect LK",frameLK);
+				imshow("rect bw",temp);
+				
+				Mat LKFrame=frameCurOrig.clone();
+				Mat prevLKFrame=prevFrame.clone();
+				if(true)
+				{
+
+					searchForVehicle(temp,LKFrame);
+					searchForVehicle(temp,prevLKFrame);
+				}
+				imshow("rect bw",temp);
+				imshow("frame LK",LKFrame);
+				imshow("prevframe LK",prevLKFrame);
+				//imshow("LK",frameLK);
+				/**********LK*************/
+				return temp;
+
+}
+int main(int argc, char** argv) {
+
+  //if( argc != 3 ) { help( argv ); exit( -1 ); }
+
+  // Initialize, load two images from the file system, and
+  // allocate the images and other structures we will need for
+  // results.
+  //
+  //Mat imgA = imread( "newStock2.png");
+  //Mat imgAOrig=imgA.clone();
+  
+  //Mat imgB = imread( "newStock1.png");
+  bool pause=false;
+ 
+  Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
+  VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
+  //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
+ //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\Thesis\\sampleVideo.avi");
+  double fps = cap.get(CV_CAP_PROP_FPS);
+  int framepos;
+  Size img_sz;
+
+  int i,j;
+  Mat gray;
+  Mat thresholdImage;
+  
+  while(true)
+  {
+	      
+		  cap >> curFrame;
+		
+		framepos=(int)cap.get(CV_CAP_PROP_POS_FRAMES);
+		  
+	    cvtColor( curFrame, curFrame, COLOR_BGR2GRAY); 
+		curFrame.convertTo(curFrame, CV_64F, 1.0/255);
+		if(framepos!=1)
+		 {
+				 LKDetection(prevFrame, curFrame);
+				
 		  }
 		 
 			  
