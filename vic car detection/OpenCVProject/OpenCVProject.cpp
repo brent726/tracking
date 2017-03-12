@@ -312,7 +312,7 @@ Mat sobelDetection(Mat curFrame)
 				int scale = 1;
 				int delta = 0;
 				int ddepth = CV_16S;
-				Mat frameCurOrig=curFrame.clone();
+				Mat curFrameCpy=curFrame.clone();
 				Mat sobelResult=curFrame.clone();
 				Mat thresholdImage;
 				vector< vector<Point> > contours;
@@ -320,13 +320,14 @@ Mat sobelDetection(Mat curFrame)
 				//find contours of filtered image using openCV findContours function
 			    vector<vector<Point> > contours_poly( contours.size() );
 			    vector<Rect> boundRect( contours.size() );
-				
+				double minVal, maxVal;
 				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
 				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
 				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
 				//sobel 
-				
-				cv::cvtColor(frameCurOrig,gray,COLOR_BGR2GRAY);
+				minMaxLoc(curFrameCpy,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
+				curFrameCpy.convertTo(gray,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
+
 				GaussianBlur(gray, gray, Size(15,15), 0, 0, BORDER_DEFAULT );
 				Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
 				convertScaleAbs( grad_x, abs_grad_x );
@@ -345,7 +346,7 @@ Mat sobelDetection(Mat curFrame)
 				findContours(thresholdImage,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
 				  /// Approximate contours to polygons + get bounding rects and circles
 				 for( i = 0; i < contours.size(); i++ )
-				 {		approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+				 {		//approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
 						//boundRect[i] = boundingRect( Mat(contours_poly[i]) );
 				 }
 				 for( i = 0; i< contours.size(); i++ )
@@ -399,8 +400,8 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				minMaxLoc(LKResultImage,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
 				LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 				// imshow("gray LK",grayLK);
-				 cv::threshold(grayLK,thresholdImage,20,255,THRESH_BINARY);
-				 //cv::imshow("LK Threshold Image", thresholdImage);
+				 cv::threshold(grayLK,thresholdImage,5,255,THRESH_BINARY);
+				 cv::imshow("LK Threshold Image", thresholdImage);
 				 //morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
 				//cv::imshow("LK Morph Image", thresholdImage);
 				Mat frameLK=frameCurOrig.clone();
@@ -416,35 +417,15 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 			  vector<vector<Point> > contours_poly( contours.size() );
 			  vector<Rect> boundRect( contours.size() );
 				  for( i = 0; i < contours.size(); i++ )
-				 { approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
-					boundRect[i] = boundingRect( Mat(contours_poly[i]) );
+				 { //approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+					//boundRect[i] = boundingRect( Mat(contours_poly[i]) );
 				 }
 
 			    for( i = 0; i< contours.size(); i++ )
 				{
-				   //drawContours( temp, contours_poly[i], i, Scalar(255), 1, 8, vector<Vec4i>(), 0, Point() );
-				   //rectangle( frameLK, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
-				   rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), CV_FILLED);
+				   //rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), CV_FILLED);
 				}
-				int dilate_size=2;
-				Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
-					//dilate(temp,temp,dilateElement); 
-					//morphologyEx(temp,temp,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
-
-				findContours(temp,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
-				for( i = 0; i < contours.size(); i++ )
-				 { approxPolyDP( contours[i], contours_poly[i], 3, true );
-				   boundRect[i] = boundingRect( Mat(contours_poly[i]) );
-				 }
-				 for( i = 0; i< contours.size(); i++ )
-				{
-				   //drawContours( temp, contours_poly[i], i, Scalar(255), 1, 8, vector<Vec4i>(), 0, Point() );
-				   rectangle( frameLK, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
-				   //drawContours( dstImg, contours,i, Scalar(255, 255, 255), CV_FILLED);	
-				   rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2,8,0);
-				   //circle( drawing, center[i], (int)radius[i], color, 2, 8, 0 );
-				}
-				//imshow("rect LK",frameLK);
+				
 				imshow("rect bw",temp);
 				
 				Mat LKFrame=frameCurOrig.clone();
@@ -452,12 +433,12 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				if(true)
 				{
 
-					searchForVehicle(temp,LKFrame);
-					searchForVehicle(temp,prevLKFrame);
+					//searchForVehicle(temp,LKFrame);
+					//searchForVehicle(temp,prevLKFrame);
 				}
-				imshow("rect bw",temp);
-				imshow("frame LK",LKFrame);
-				imshow("prevframe LK",prevLKFrame);
+				//imshow("rect bw",temp);
+				//imshow("frame LK",LKFrame);
+				//imshow("prevframe LK",prevLKFrame);
 				//imshow("LK",frameLK);
 				/**********LK*************/
 				return temp;
@@ -478,16 +459,18 @@ int main(int argc, char** argv) {
   bool pause=false;
  
   Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
-  VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
+  //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
   //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
- //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\Thesis\\sampleVideo.avi");
+  //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\Thesis\\sampleVideo.avi");
+   VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\1stVideoFeb8(edited).mp4");
+  
   double fps = cap.get(CV_CAP_PROP_FPS);
   int framepos;
   Size img_sz;
 
   int i,j;
   Mat gray;
-  Mat thresholdImage;
+  Mat sobelImage, LKImage,comboResultImage;
   
   while(true)
   {
@@ -500,11 +483,12 @@ int main(int argc, char** argv) {
 		curFrame.convertTo(curFrame, CV_64F, 1.0/255);
 		if(framepos!=1)
 		 {
-				 LKDetection(prevFrame, curFrame);
+				 LKImage = LKDetection(prevFrame, curFrame);
+			     //sobelImage=sobelDetection(curFrame);
 				
 		  }
-		 
-			  
+			comboResultImage=LKImage+sobelImage;
+			 //imshow("Result",comboResultImage);
 			 prevFrame=curFrame;
 			 // system("PAUSE");
 			  pause=false;
