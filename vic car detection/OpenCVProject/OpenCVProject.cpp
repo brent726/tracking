@@ -44,6 +44,8 @@ char path_gray[70];
 	#define true ((bool)1)
 #endif
 
+
+
 Mat get_fx(Mat &src1, Mat &src2)
 {
 	Mat fx;
@@ -282,7 +284,7 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 					printf("\n");
 
 					//if(width>50 && width <140 && height>30 && height<50)
-					if(width>10 &&width<150 && height>10&&height<50)
+					if((width>15 && width<200) && (height>15 && height<50))
 					{
 					Vehicle car;
 					
@@ -329,8 +331,10 @@ Mat sobelDetection(Mat curFrame)
 				curFrameCpy.convertTo(gray,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 
 				GaussianBlur(gray, gray, Size(15,15), 0, 0, BORDER_DEFAULT );
-				Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+				//Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+				Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, 2);
 				convertScaleAbs( grad_x, abs_grad_x );
+				//Sobel( gray, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
 				Sobel( gray, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
 				convertScaleAbs( grad_y, abs_grad_y );
 				addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
@@ -402,6 +406,9 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				imshow("gray LK",grayLK);
 				 cv::threshold(grayLK,thresholdImage,5,255,THRESH_BINARY);
 				 cv::imshow("LK Threshold Image", thresholdImage);
+				 int erode_size=3;
+				Mat erodeElement = getStructuringElement(cv::MORPH_RECT,Size(2 * erode_size + 1, 2* erode_size + 1),Point(erode_size, erode_size) );
+				erode(thresholdImage,thresholdImage,erodeElement); 
 				 //morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
 				//cv::imshow("LK Morph Image", thresholdImage);
 				//Mat frameLK=frameCurOrig.clone();
@@ -460,9 +467,9 @@ int main(int argc, char** argv) {
  
   Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
  // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
-  VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
+  //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
   //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\Thesis\\sampleVideo.avi");
-  // VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\1stVideoFeb8(edited).mp4");
+  VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\1stVideoFeb8(edited).mp4");
   
   double fps = cap.get(CV_CAP_PROP_FPS);
   int framepos;
@@ -507,19 +514,33 @@ int main(int argc, char** argv) {
 					boundRect[i] = boundingRect( Mat(contours_poly[i]) );
 				 }
 				Mat resFrame=origCur.clone();
+				Mat rectBW= Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
+			    for( i = 0; i< contours.size(); i++ )
+				{
+				   double a=contourArea( contours[i],false);  
+					if(a<7500&&a>150)
+					{
+						rectangle( rectBW, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 1, 8, 0 );
+						rectangle( resFrame, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 1, 8, 0 );
+					}					
+				}
+				imshow("rect",resFrame);
+				
+
+				//find contours of filtered image using openCV findContours function
+				/*findContours(rectBW,contours, hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
+				for( i = 0; i < contours.size(); i++ )
+				 { 
+					approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+					boundRect[i] = boundingRect( Mat(contours_poly[i]) );
+				 }
 	
 			    for( i = 0; i< contours.size(); i++ )
 				{
-				   //rectangle( comboResultImage, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2,8);
-				   double a=contourArea( contours[i],false);  
-					if(a<7500&&a>100)
-					{
 						rectangle( resFrame, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
-					}					
-					
-				}
-				
-				searchForVehicle(resFrame,origCur);
+				}*/
+				//imshow("Final", res);
+				searchForVehicle(rectBW,origCur);
 				imshow("final",origCur);
 				
 				
