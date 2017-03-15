@@ -42,6 +42,7 @@ char path_gray[70];
 	#define false ((bool)0)
 	#define true ((bool)1)
 #endif
+
 //global variables
 Point2f point;
 bool addRemovePt = false;
@@ -106,6 +107,7 @@ Mat get_fx(Mat &src1, Mat &src2)
 	return fx;
 
 }
+
 Mat get_fy(Mat &src1, Mat &src2){
     Mat fy;
     Mat kernel = Mat::ones(2, 2, CV_64FC1);
@@ -205,35 +207,34 @@ Mat get_Sum9_Mat(Mat &m){
     }
     return res;
 }
-Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat &u, Mat &v){
+Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2){
 	
     Mat fx = get_fx(img1, img2);
-    // Mat fy = get_fy(img1, img2);
-     Mat ft = get_ft(img1, img2);
+    Mat ft = get_ft(img1, img2);
+	Mat fy = get_fy(img1, img2);
 	 //imshow("ft",ft);
-	// imshow("fx",fx);
+	//imshow("fx",fx);
+	imshow("fx",fx);
+	imshow("fy",fy);
 	// Mat ft8u;
-	
 	 //ft.convertTo(ft8u,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 	 
-     Mat fx2 = fx.mul(fx);
+     //Mat fx2 = fx.mul(fx);
 	 //imshow("fx2",fx2);
-	 int dilate_size = 2;  
-     /*Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
-	 dilate(fx,fx,dilateElement); */
 	 //imshow("dilate lines fx",fx);
      //Mat fy2 = fy.mul(fy);
 	 //imshow("fy2",fy2);
      //Mat fxfy = fx.mul(fy);
 	 //imshow("fxfy",fxfy);
      Mat fxft = fx.mul(ft);
-	 //imshow("fxft",fxft);
-	 
+	 imshow("fxft",fxft);
+
+	 int dilate_size = 2;  
     Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
 	dilate(fxft,fxft,dilateElement); 
    imshow("dilate lines fxft",fxft);
-     /*Mat fyft = fy.mul(ft);
-	 imshow("fyft",fyft);*/
+     Mat fyft = fy.mul(ft);
+	 imshow("fyft",fyft);
 
 	// Mat sumfx2 = get_Sum9_Mat(fx2);
 	 //imshow("sumfx2",sumfx2);
@@ -434,20 +435,20 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				//imshow("curFrame",curFrame);
 				//Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
 				//Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
-				Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
+				//Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
+				//Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
 
 				/***************LK**********************/
 				Mat grayLK;
 				double  minVal,  maxVal;
 				
-				Mat LKResultImage=getLucasKanadeOpticalFlow(prevFrame, curFrame, u, v);
-				minMaxLoc(LKResultImage,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
-				LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
+				Mat LKResultImage=getLucasKanadeOpticalFlow(prevFrame, curFrame);
+				//minMaxLoc(LKResultImage,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
+				//LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 			
 				//imshow("gray LK",grayLK);
-				 cv::threshold(grayLK,thresholdImage,5,255,THRESH_BINARY);
-				 cv::imshow("LK Threshold Image", thresholdImage);
+				 //cv::threshold(grayLK,thresholdImage,5,255,THRESH_BINARY);
+				 //cv::imshow("LK Threshold Image", thresholdImage);
 				 //morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
 				//cv::imshow("LK Morph Image", thresholdImage);
 				//Mat frameLK=frameCurOrig.clone();
@@ -455,19 +456,19 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				// Mat temp;
 				//thresholdImage.copyTo(temp);
 				//these two vectors needed for output of findContours
-				vector< vector<Point> > contours;
-				vector<Vec4i> hierarchy;
+				//vector< vector<Point> > contours;
+				//vector<Vec4i> hierarchy;
 				//find contours of filtered image using openCV findContours function
 				//findContours(temp,contours, hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
 				  /// Approximate contours to polygons + get bounding rects and circles
-			  vector<vector<Point> > contours_poly( contours.size() );
-			  vector<Rect> boundRect( contours.size() );
-				  for( i = 0; i < contours.size(); i++ )
+			  //vector<vector<Point> > contours_poly( contours.size() );
+			 // vector<Rect> boundRect( contours.size() );
+				  //for( i = 0; i < contours.size(); i++ )
 				 { //approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
 					//boundRect[i] = boundingRect( Mat(contours_poly[i]) );
 				 }
 
-			    for( i = 0; i< contours.size(); i++ )
+			   // for( i = 0; i< contours.size(); i++ )
 				{
 				   //rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), CV_FILLED);
 				}
@@ -487,7 +488,8 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				//imshow("prevframe LK",prevLKFrame);
 				//imshow("LK",frameLK);
 				/**********LK*************/
-				return thresholdImage;
+				//return thresholdImage;
+				return curFrame;
 
 }
 
@@ -520,7 +522,7 @@ int main(int argc, char** argv) {
   double fps = cap.get(CV_CAP_PROP_FPS);
   int framepos=0;
   Size img_sz;
-
+  Mat origFrame;
   int i,j;
   Mat gray;
   Mat sobelImage, LKImage,comboResultImage;
@@ -530,7 +532,9 @@ int main(int argc, char** argv) {
   {
 	      
 		  cap >> image;
-			
+		 prevFrame= Mat::zeros(image.rows, image.cols, CV_8U);
+		  image.copyTo(origFrame);
+		 framepos=(int)cap.get(CV_CAP_PROP_POS_FRAMES);
 		  //road detection
 		if (framepos == 1 || framepos % 10 == 0)
 		{
@@ -548,79 +552,35 @@ int main(int argc, char** argv) {
 		int halfY = (HroadBorder.br().y + HroadBorder.tl().y) / 2;
 		Point HhalfFirstpoint = Point(HroadBorder.tl().x, halfY);
 		Point HhalfSecondPoint = Point(HroadBorder.br().x, halfY);
-
+		
 		//draw rectangular shape of result of road detection
 		rectangle(image, HroadBorder.tl(), HroadBorder.br(), Scalar(255, 0, 0), 2, 8, 0);
 		line(image, HhalfFirstpoint, HhalfSecondPoint, Scalar(255, 0, 0), 2, 8, 0);
 		
-		curFrame=image(HROAD).clone();
-		imshow("curFrame", curFrame);
-		framepos=(int)cap.get(CV_CAP_PROP_POS_FRAMES);
-		  
+		//curFrame=image(HROAD);
+		image(HROAD).copyTo(curFrame);
+		//imshow("curFrame", curFrame);
 	    cvtColor( curFrame, curFrame, COLOR_BGR2GRAY); 
-		Mat origCur=curFrame.clone();
+	
+		
 		curFrame.convertTo(curFrame, CV_64F, 1.0/255);
 		
 		if(framepos!=1)
 		 {
 				 LKImage = LKDetection(prevFrame, curFrame);
-			     sobelImage=sobelDetection(curFrame);
-				 searchForVehicle(sobelImage,origCur);
-				 imshow("final",origCur);
+			     //sobelImage=sobelDetection(curFrame);
+				 
+				 //imshow("final",origCur);
 
 				 //comboResultImage= Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
 				 //comboResultImage=LKImage+sobelImage;
-				 //imshow("combo result",comboResultImage);
-				 //these two vectors needed for output of findContours
-				vector< vector<Point> > contours;
-				vector<Vec4i> hierarchy;
-				//find contours of filtered image using openCV findContours function
-				//findContours(comboResultImage,contours, hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
-				
-				  /// Approximate contours to polygons + get bounding rects and circles
-				
-			  vector<vector<Point> > contours_poly( contours.size() );
-			  vector<Rect> boundRect( contours.size() );
-				  for( i = 0; i < contours.size(); i++ )
-				 { 
-					//approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
-					//boundRect[i] = boundingRect( Mat(contours_poly[i]) );
-				 }
-				Mat resFrame=origCur.clone();
-				Mat rectBW= Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
-			    for( i = 0; i< contours.size(); i++ )
-				{
-				   double a=contourArea( contours[i],false);  
-					if(a<7500&&a>150)
-					{
-						//rectangle( rectBW, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 1, 8, 0 );
-						//rectangle( resFrame, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 1, 8, 0 );
-					}					
-				}
-				//imshow("rect",resFrame);
-				
-
-				//find contours of filtered image using openCV findContours function
-				/*findContours(rectBW,contours, hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
-				for( i = 0; i < contours.size(); i++ )
-				 { 
-					approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
-					boundRect[i] = boundingRect( Mat(contours_poly[i]) );
-				 }
-	
-			    for( i = 0; i< contours.size(); i++ )
-				{
-						rectangle( resFrame, boundRect[i].tl(), boundRect[i].br(), Scalar(255), 2, 8, 0 );
-				}*/
-				//imshow("Final", res);
-				//searchForVehicle(comboResultImage,origCur);
-				//imshow("final",origCur);
-				
-				
-				
-		 // }
-			
-			// prevFrame=curFrame;
+				 //searchForVehicle(sobelImage, origCur);
+				 //imshow("combo result",origCur);		
+		 }
+		
+			prevFrame=curFrame;
+			//prevFrame.convertTo(prevFrame, CV_64F, 1.0/255);
+			imshow("prev frame", prevFrame);
 			 // system("PAUSE");
 			  pause=false;
 			  switch(waitKey(100/fps)){
