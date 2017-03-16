@@ -1,4 +1,4 @@
-﻿Build started 3/15/2017 8:28:39 PM.
+﻿Build started 3/16/2017 8:51:02 PM.
      1>Project "C:\Users\PCBLAB_01\Desktop\tracking\vic car detection\OpenCVProject\OpenCVProject.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "Debug\OpenCVProject 3.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -8,20 +8,17 @@
          OpenCVProject.cpp
      1>c:\opencv\build\include\opencv2\flann\logger.h(66): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
                  c:\program files\microsoft visual studio 10.0\vc\include\stdio.h(234) : see declaration of 'fopen'
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(270): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(333): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(271): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(334): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(394): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(398): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(352): warning C4101: 'j' : unreferenced local variable
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(443): warning C4101: 'maxVal' : unreferenced local variable
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(430): warning C4101: 'i' : unreferenced local variable
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(443): warning C4101: 'minVal' : unreferenced local variable
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(586): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(526): warning C4101: 'i' : unreferenced local variable
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(526): warning C4101: 'j' : unreferenced local variable
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(735): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(618): warning C4101: 'area' : unreferenced local variable
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(335): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(354): warning C4101: 'i' : unreferenced local variable
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(354): warning C4101: 'j' : unreferenced local variable
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(396): warning C4101: 'i' : unreferenced local variable
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(500): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(500): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(527): warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(676): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\pcblab_01\desktop\tracking\vic car detection\opencvproject\opencvproject.cpp(559): warning C4101: 'area' : unreferenced local variable
        ManifestResourceCompile:
          All outputs are up-to-date.
        Link:
@@ -42,4 +39,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:03.09
+Time Elapsed 00:00:03.26

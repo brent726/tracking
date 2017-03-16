@@ -214,47 +214,48 @@ Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2){
 	Mat fy = get_fy(img1, img2);
 	 //imshow("ft",ft);
 	//imshow("fx",fx);
-	imshow("fx",fx);
-	imshow("fy",fy);
+	//imshow("fx",fx);
+	//imshow("fy",fy);
 	// Mat ft8u;
 	 //ft.convertTo(ft8u,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 	 
-     //Mat fx2 = fx.mul(fx);
-	 //imshow("fx2",fx2);
+     Mat fx2 = fx.mul(fx);
+	 imshow("fx2",fx2);
 	 //imshow("dilate lines fx",fx);
-     //Mat fy2 = fy.mul(fy);
-	 //imshow("fy2",fy2);
-     //Mat fxfy = fx.mul(fy);
-	 //imshow("fxfy",fxfy);
-     Mat fxft = fx.mul(ft);
-	 imshow("fxft",fxft);
+     Mat fy2 = fy.mul(fy);
+	 imshow("fy2",fy2);
+     Mat fxfy = fx.mul(fy);
+	//imshow("fxfy",fxfy);
+    // Mat fxft = fx.mul(ft);
+	//imshow("fxft",fxft);
 
+	 
+    /* Mat fyft = fy.mul(ft);
+	 //imshow("fyft",fyft);
 	 int dilate_size = 2;  
     Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
-	dilate(fxft,fxft,dilateElement); 
-   imshow("dilate lines fxft",fxft);
-     Mat fyft = fy.mul(ft);
-	 imshow("fyft",fyft);
-
-	// Mat sumfx2 = get_Sum9_Mat(fx2);
-	 //imshow("sumfx2",sumfx2);
-	 /*Mat sumfy2 = get_Sum9_Mat(fy2);
-	 imshow("sumfy2",sumfy2);*/
+	dilate(fyft,fyft,dilateElement); */
+   //imshow("dilate lines fyft",fyft);
+	 Mat sumfx2 = get_Sum9_Mat(fx2);
+	 imshow("sumfx2",sumfx2);
+	// Mat sumfy2 = get_Sum9_Mat(fy2);
+	 //imshow("sumfy2",sumfy2);
 	 //Mat sumfxft = get_Sum9_Mat(fxft);
 	// imshow("sumfxft",sumfxft);
-    /* Mat sumfxfy = get_Sum9_Mat(fxfy);
-	 imshow("sumfxfy",sumfxfy);*/
+    // Mat sumfxfy = get_Sum9_Mat(fxfy);
+	 //imshow("sumfxfy",sumfxfy);
      //Mat sumfyft = get_Sum9_Mat(fyft);
-
-	/* Mat tmp = sumfx2.mul(sumfy2) - sumfxfy.mul(sumfxfy);
-	 imshow("tmp",tmp);
-    u = sumfxfy.mul(sumfyft) - sumfy2.mul(sumfxft);
-    v = sumfxft.mul(sumfxfy) - sumfx2.mul(sumfyft);
-	imshow("u",u);
-	imshow("v",v);
-    divide(u, tmp, u);
-    divide(v, tmp, v);*/
-	 return fxft;
+	// Mat resultfx2fy2=sumfx2+sumfy2;
+	 //imshow("resultn sum fx and fy", resultfx2fy2);
+	//Mat tmp = sumfx2.mul(sumfy2) - sumfxfy.mul(sumfxfy);
+	 //imshow("tmp",tmp);
+   // u = sumfxfy.mul(sumfyft) - sumfy2.mul(sumfxft);
+//    v = sumfxft.mul(sumfxfy) - sumfx2.mul(sumfyft);
+	//imshow("u",u);
+	//imshow("v",v);
+    //divide(u, tmp, u);
+    /*divide(v, tmp, v);*/
+	 return sumfx2;
 }
 //int to string helper function
 string intToString(int number){
@@ -269,7 +270,7 @@ void drawObject(vector<Vehicle> VehicleCars,Mat &frame){
 
 	for(int i =0; i<VehicleCars.size(); i++){
 	//cv::circle(frame,cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()),20,cv::Scalar(0,255,0));
-		rectangle( frame, VehicleCars.at(i).getTl(), VehicleCars.at(i).getBr(), cv::Scalar(0,255,0), 2, 8, 0 );
+		rectangle( frame, VehicleCars.at(i).getTl(), VehicleCars.at(i).getBr(), cv::Scalar(0,255,0), 1, 8, 0 );
 	//location of the object
 	//cv::putText(frame,intToString(VehicleCars.at(i).getXPos())+ " , " + intToString(VehicleCars.at(i).getYPos()),cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()+20),1,1,Scalar(0,255,0));
 	//cv::putText(frame,intToString(VehicleCars.at(i).getID()),cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()+20),1,1,Scalar(0,255,0));
@@ -326,7 +327,7 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 					printf("\n");
 
 					//if(width>50 && width <140 && height>30 && height<50)
-					if((width>15 && width<120) && (height>15 && height<50))
+					if((width>25 && width<120) && (height>20 && height<45))
 					{
 					Vehicle car;
 					
@@ -342,6 +343,7 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 			}
 			//draw object location on screen
 			drawObject(vehicles,cameraFeed);
+			// imshow("vechicles result",cameraFeed);
 	}
 
 }
@@ -365,63 +367,27 @@ Mat sobelDetection(Mat curFrame)
 			    vector<vector<Point> > contours_poly( contours.size() );
 			    vector<Rect> boundRect( contours.size() );
 				double minVal, maxVal;
-				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				//Mat bwLKResult=Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
 				//sobel 
 				minMaxLoc(curFrameCpy,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
 				curFrameCpy.convertTo(gray,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 
 				GaussianBlur(gray, gray, Size(13,13), 0, 0, 1);
+				//imshow("gray",gray);
 				//Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, );
-				Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
-				convertScaleAbs( grad_x, abs_grad_x );
+				//Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+				//convertScaleAbs( grad_x, abs_grad_x );
 				//Sobel( gray, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
 				Sobel( gray, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
 				convertScaleAbs( grad_y, abs_grad_y );
-				addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
-				cv::imshow("Sobel Image", grad);
-				cv::threshold(grad,thresholdImage,20,255,THRESH_BINARY);
-				cv::imshow("Threshold Image", thresholdImage);
-				//morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
+				//addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
+				//cv::imshow("Sobel X", abs_grad_x);
+				cv::imshow("Sobel Y", abs_grad_y);
+				//cv::imshow("Sobel Image", grad);
+				cv::threshold(abs_grad_y,thresholdImage,30,255,THRESH_BINARY);
+				///cv::imshow("Threshold Image", thresholdImage);
+				morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(2,2,CV_8SC1),Point(1,1),2);
 				cv::imshow("Sobel Morphed Image", thresholdImage);
-		
-				 
-			
-				//find contours of filtered image using openCV findContours function
-				//findContours(thresholdImage,contours,hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
-				  /// Approximate contours to polygons + get bounding rects and circles
-				 for( i = 0; i < contours.size(); i++ )
-				 {		//approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
-						//boundRect[i] = boundingRect( Mat(contours_poly[i]) );
-				 }
-				 for( i = 0; i< contours.size(); i++ )
-				{
-				   //drawContours( temp, contours_poly[i], i, Scalar(255), 1, 8, vector<Vec4i>(), 0, Point() );
-				  // rectangle( thresholdImage, boundRect[i].tl(), boundRect[i].br(), Scalar(255, 255, 255), CV_FILLED);
-				   //drawContours( dstImg, contours,i, Scalar(255, 255, 255), CV_FILLED);	
-				}
-				if(true)
-				{
 
-					//searchForVehicle(thresholdImage,sobelResult);
-				}
-				//imshow("sobelRect Result", thresholdImage);
-				//printf("rows:%d cols: %d",curFrame.rows,curFrame.cols);
-				/*for(i=0;i<LKResultImage.rows;i++)
-				{
-					for(j=0;j<LKResultImage.cols;j++)
-					{
-					    //printf("curframe: %d",LKResultImage.at<uchar>(i,j));
-						//system("PAUSE");
-						if(LKResultImage.at<uchar>(i,j)>10)
-						{
-							bwLKResult.at<uchar>(i,j)=255;
-						}
-					}
-				}
-				
-				imshow("bw",bwLKResult);*/
 				return thresholdImage;
 
 }
@@ -441,55 +407,18 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				/***************LK**********************/
 				Mat grayLK;
 				double  minVal,  maxVal;
-				
+				GaussianBlur(prevFrame, prevFrame, Size(3, 3), 0, 0, BORDER_DEFAULT);
+				GaussianBlur(curFrame, curFrame, Size(3, 3), 0, 0, BORDER_DEFAULT);
 				Mat LKResultImage=getLucasKanadeOpticalFlow(prevFrame, curFrame);
-				//minMaxLoc(LKResultImage,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
-				//LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
+				minMaxLoc(LKResultImage,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
+				LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 			
-				//imshow("gray LK",grayLK);
-				 //cv::threshold(grayLK,thresholdImage,5,255,THRESH_BINARY);
-				 //cv::imshow("LK Threshold Image", thresholdImage);
-				 //morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(3,3,CV_8SC1),Point(1,1),2);
-				//cv::imshow("LK Morph Image", thresholdImage);
-				//Mat frameLK=frameCurOrig.clone();
-				//Mat frameLK=prevFrame.clone();
-				// Mat temp;
-				//thresholdImage.copyTo(temp);
-				//these two vectors needed for output of findContours
-				//vector< vector<Point> > contours;
-				//vector<Vec4i> hierarchy;
-				//find contours of filtered image using openCV findContours function
-				//findContours(temp,contours, hierarchy,CV_RETR_EXTERNAL,CV_CHAIN_APPROX_SIMPLE );// retrieves external contours
-				  /// Approximate contours to polygons + get bounding rects and circles
-			  //vector<vector<Point> > contours_poly( contours.size() );
-			 // vector<Rect> boundRect( contours.size() );
-				  //for( i = 0; i < contours.size(); i++ )
-				 { //approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
-					//boundRect[i] = boundingRect( Mat(contours_poly[i]) );
-				 }
-
-			   // for( i = 0; i< contours.size(); i++ )
-				{
-				   //rectangle( temp, boundRect[i].tl(), boundRect[i].br(), Scalar(255), CV_FILLED);
-				}
+				// imshow("gray LK",grayLK);
+				 cv::threshold(grayLK,thresholdImage,28,255,THRESH_BINARY);
+				cv::imshow("LK Threshold Image", thresholdImage);
 				
-				//imshow("rect bw",temp);
-				
-				//Mat LKFrame=frameCurOrig.clone();
-				//Mat prevLKFrame=prevFrame.clone();
-				if(true)
-				{
-
-					//searchForVehicle(temp,LKFrame);
-					//searchForVehicle(temp,prevLKFrame);
-				}
-				//imshow("rect bw",temp);
-				//imshow("frame LK",LKFrame);
-				//imshow("prevframe LK",prevLKFrame);
-				//imshow("LK",frameLK);
-				/**********LK*************/
-				//return thresholdImage;
-				return curFrame;
+				return thresholdImage;
+			
 
 }
 
@@ -515,15 +444,17 @@ int main(int argc, char** argv) {
 
   Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
  // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
-  VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
-  //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\Thesis\\sampleVideo.avi");
+ // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
+  VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0005Take2.MP4");
+ //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0008Take1.MP4");
+
   //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\1stVideoFeb8(edited).mp4");
   
   double fps = cap.get(CV_CAP_PROP_FPS);
   int framepos=0;
   Size img_sz;
   Mat origFrame;
-  int i,j;
+  double i,j;
   Mat gray;
   Mat sobelImage, LKImage,comboResultImage;
 
@@ -532,12 +463,12 @@ int main(int argc, char** argv) {
   {
 	      
 		  cap >> image;
-		 prevFrame= Mat::zeros(image.rows, image.cols, CV_8U);
-		  image.copyTo(origFrame);
+		  image.copyTo(origFrame);// for final output
+		  //origFrame=image.clone();
 		 framepos=(int)cap.get(CV_CAP_PROP_POS_FRAMES);
 		  //road detection
-		if (framepos == 1 || framepos % 10 == 0)
-		{
+		/*if (framepos == 1 || framepos % 10 == 0)
+		{*/
 			HroadBorder = roadDetectionHorizontal(image);
 			HroadTopX = HroadBorder.tl().x;
 			HroadTopY = HroadBorder.tl().y;
@@ -545,7 +476,7 @@ int main(int argc, char** argv) {
 			HroadBotY = HroadBorder.br().y;
 			HROAD = Rect(HroadTopX, HroadTopY, (HroadBotX - HroadTopX), (HroadBotY - HroadTopY));//horizontal road dimensions
 
-		}
+		//}
 
 
 		//horizontal
@@ -555,12 +486,23 @@ int main(int argc, char** argv) {
 		
 		//draw rectangular shape of result of road detection
 		rectangle(image, HroadBorder.tl(), HroadBorder.br(), Scalar(255, 0, 0), 2, 8, 0);
-		line(image, HhalfFirstpoint, HhalfSecondPoint, Scalar(255, 0, 0), 2, 8, 0);
+		line(image, HhalfFirstpoint, HhalfSecondPoint, Scalar(255, 0, 0), 1, 8, 0);
 		
 		//curFrame=image(HROAD);
-		image(HROAD).copyTo(curFrame);
-		//imshow("curFrame", curFrame);
-	    cvtColor( curFrame, curFrame, COLOR_BGR2GRAY); 
+		origFrame.copyTo(curFrame);
+		cvtColor( curFrame, curFrame, COLOR_BGR2GRAY); 
+		for (i = 0;i<image.size().width;i++)
+		{
+			for (j = 0;j<image.size().height;j++)
+			{
+				if ((j < HroadBorder.tl().y)||(j > HroadBorder.br().y))  // these threshold values must be tuned or determined automatically!
+				{
+					curFrame.at<char>(j, i) = 0;
+				}
+			}
+		}
+		imshow("curFrame black", curFrame);
+	    
 	
 		
 		curFrame.convertTo(curFrame, CV_64F, 1.0/255);
@@ -568,19 +510,18 @@ int main(int argc, char** argv) {
 		if(framepos!=1)
 		 {
 				 LKImage = LKDetection(prevFrame, curFrame);
-			     //sobelImage=sobelDetection(curFrame);
+			     sobelImage=sobelDetection(curFrame);
 				 
-				 //imshow("final",origCur);
-
-				 //comboResultImage= Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
-				 //comboResultImage=LKImage+sobelImage;
-				 //searchForVehicle(sobelImage, origCur);
-				 //imshow("combo result",origCur);		
+				 comboResultImage= Mat::zeros(origFrame.rows, origFrame.cols, CV_8U);
+				 comboResultImage=LKImage+sobelImage;
+				 imshow("combo result",comboResultImage);
+				 //searchForVehicle(LKImage, origFrame);
+				 //imshow("detect result", origFrame);		
 		 }
 		
 			prevFrame=curFrame;
 			//prevFrame.convertTo(prevFrame, CV_64F, 1.0/255);
-			imshow("prev frame", prevFrame);
+			//imshow("prev frame", prevFrame);
 			 // system("PAUSE");
 			  pause=false;
 			  switch(waitKey(100/fps)){
@@ -628,12 +569,12 @@ Rect roadDetectionHorizontal(Mat roadImage)
 
 	Mat gradImage;
 	Mat roadBlurImage;
-	GaussianBlur(roadImage, roadBlurImage, Size(3, 3), 0, 0, BORDER_DEFAULT);
+	GaussianBlur(roadImage, roadImage, Size(17, 17), 0, 0, BORDER_DEFAULT);
 	/// Total Gradient (approximate)
-	addWeighted(roadImage, 1, roadBlurImage, 1, 0, gradImage);
+	//addWeighted(roadImage, 1, roadBlurImage, 1, 0, gradImage);
 
-	//imshow( "Road Image Sobel", gradImage );
-	roadImage = gradImage.clone();
+	//imshow( "Road Image Sobel", roadImage );
+	//roadImage = gradImage.clone();
 	cvtColor(roadImage, labRoadImage, COLOR_BGR2Lab);
 	
 	
@@ -641,9 +582,9 @@ Rect roadDetectionHorizontal(Mat roadImage)
 	{
 		for (y = 0;y<roadImage.size().height;y++)
 		{
-			if ((labRoadImage.at<Vec3b>(y, x)[1]>125) && (labRoadImage.at<Vec3b>(y, x)[1]<135))  // these threshold values must be tuned or determined automatically!
+			if ((labRoadImage.at<Vec3b>(y, x)[1]>125) && (labRoadImage.at<Vec3b>(y, x)[1]<131))  // these threshold values must be tuned or determined automatically!
 			{
-				if ((labRoadImage.at<Vec3b>(y, x)[2]>125) && (labRoadImage.at<Vec3b>(y, x)[2]<135)) //these threshold values must be tuned or determined automatically!
+				if ((labRoadImage.at<Vec3b>(y, x)[2]>120) && (labRoadImage.at<Vec3b>(y, x)[2]<129)) //these threshold values must be tuned or determined automatically!
 				{
 					//changing the pixel intensity to white
 					im.at<uchar>(y, x) = 255;
