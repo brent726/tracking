@@ -383,7 +383,7 @@ Mat sobelDetection(Mat curFrame)
 				//cv::imshow("Sobel X", abs_grad_x);
 				cv::imshow("Sobel Y", abs_grad_y);
 				//cv::imshow("Sobel Image", grad);
-				cv::threshold(abs_grad_y,thresholdImage,30,255,THRESH_BINARY);
+				cv::threshold(abs_grad_y,thresholdImage,32,255,THRESH_BINARY);
 				///cv::imshow("Threshold Image", thresholdImage);
 				morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(2,2,CV_8SC1),Point(1,1),2);
 				cv::imshow("Sobel Morphed Image", thresholdImage);
@@ -414,7 +414,7 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 			
 				// imshow("gray LK",grayLK);
-				 cv::threshold(grayLK,thresholdImage,28,255,THRESH_BINARY);
+				 cv::threshold(grayLK,thresholdImage,18,255,THRESH_BINARY);
 				cv::imshow("LK Threshold Image", thresholdImage);
 				
 				return thresholdImage;
