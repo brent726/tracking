@@ -220,10 +220,10 @@ Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2){
 	 //ft.convertTo(ft8u,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 	 
      Mat fx2 = fx.mul(fx);
-	 imshow("fx2",fx2);
+	// imshow("fx2",fx2);
 	 //imshow("dilate lines fx",fx);
      Mat fy2 = fy.mul(fy);
-	 imshow("fy2",fy2);
+	 //imshow("fy2",fy2);
      Mat fxfy = fx.mul(fy);
 	//imshow("fxfy",fxfy);
     // Mat fxft = fx.mul(ft);
@@ -271,6 +271,7 @@ void drawObject(vector<Vehicle> VehicleCars,Mat &frame){
 	for(int i =0; i<VehicleCars.size(); i++){
 	//cv::circle(frame,cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()),20,cv::Scalar(0,255,0));
 		rectangle( frame, VehicleCars.at(i).getTl(), VehicleCars.at(i).getBr(), cv::Scalar(0,255,0), 1, 8, 0 );
+		//rectangle( frame, VehicleCars.at(i).getTl(), VehicleCars.at(i).getBr(), cv::Scalar(255), CV_FILLED);
 	//location of the object
 	//cv::putText(frame,intToString(VehicleCars.at(i).getXPos())+ " , " + intToString(VehicleCars.at(i).getYPos()),cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()+20),1,1,Scalar(0,255,0));
 	//cv::putText(frame,intToString(VehicleCars.at(i).getID()),cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()+20),1,1,Scalar(0,255,0));
@@ -304,7 +305,7 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 		
 			for (int index = 0; index >= 0; index = hierarchy[index][0]) {
 
-				cout << "\n Countour area: " << contourArea(contours[index]);
+				//cout << "\n Countour area: " << contourArea(contours[index]);
 				
 				Moments moment = moments((cv::Mat)contours[index]);
 				double area = moment.m00;
@@ -314,7 +315,7 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 				//we only want the object with the largest area so we safe a reference area each
 				//iteration and compare it to the area in the next iteration.
 				if(area>MIN_OBJECT_AREA){
-					printf("  ID : %d Area: %lf",index,area);
+					//printf("  ID : %d Area: %lf",index,area);
 
 					approxPolyDP( Mat(contours[index]), contours_poly[index], 3, true );
 					boundRect[index] = boundingRect( Mat(contours_poly[index]) );
@@ -322,13 +323,13 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 					int width =  boundRect[index].width;
 					int height = boundRect[index].height;
 
-					cout << " Width: " << width;
-					cout << " Height: " << height;
-					printf("\n");
+					//cout << " Width: " << width;
+					//cout << " Height: " << height;
+					//printf("\n");
 
 					//if(width>50 && width <140 && height>30 && height<50)
-					if((width>25 && width<120) && (height>20 && height<45))
-					{
+					//if((width>25 && width<120) && (height>20 && height<45))
+					//{
 					Vehicle car;
 					
 					car.setXPos(moment.m10/area);
@@ -338,7 +339,7 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 					car.setTl(boundRect[index].tl());
 
 					vehicles.push_back(car);
-					}
+					//}
 				}
 			}
 			//draw object location on screen
@@ -371,7 +372,7 @@ Mat sobelDetection(Mat curFrame)
 				minMaxLoc(curFrameCpy,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
 				curFrameCpy.convertTo(gray,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 
-				GaussianBlur(gray, gray, Size(13,13), 0, 0, 1);
+				GaussianBlur(gray, gray, Size(15,15), 0, 0, 1); //13, 13
 				//imshow("gray",gray);
 				//Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, );
 				//Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
@@ -383,9 +384,12 @@ Mat sobelDetection(Mat curFrame)
 				//cv::imshow("Sobel X", abs_grad_x);
 				cv::imshow("Sobel Y", abs_grad_y);
 				//cv::imshow("Sobel Image", grad);
-				cv::threshold(abs_grad_y,thresholdImage,32,255,THRESH_BINARY);
-				///cv::imshow("Threshold Image", thresholdImage);
+				//cv::threshold(abs_grad_y,thresholdImage,30,255,THRESH_BINARY);
+				cv::threshold(abs_grad_y,thresholdImage,20,255,THRESH_BINARY);
+				cv::imshow("Threshold Image", thresholdImage);
+			  
 				morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(2,2,CV_8SC1),Point(1,1),2);
+
 				cv::imshow("Sobel Morphed Image", thresholdImage);
 
 				return thresholdImage;
@@ -414,7 +418,8 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 			
 				// imshow("gray LK",grayLK);
-				 cv::threshold(grayLK,thresholdImage,18,255,THRESH_BINARY);
+				// cv::threshold(grayLK,thresholdImage,18,255,THRESH_BINARY);
+				cv::threshold(grayLK,thresholdImage,10,255,THRESH_BINARY);
 				cv::imshow("LK Threshold Image", thresholdImage);
 				
 				return thresholdImage;
@@ -444,8 +449,8 @@ int main(int argc, char** argv) {
 
   Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
  // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
- // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\1stVideoFeb8(edited).mp4");
-  VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0005Take2.MP4");
+ VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\DJI_0005Take2.MP4");
+ // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0005Take2.MP4");
  //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0008Take1.MP4");
 
   //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\1stVideoFeb8(edited).mp4");
@@ -485,8 +490,8 @@ int main(int argc, char** argv) {
 		Point HhalfSecondPoint = Point(HroadBorder.br().x, halfY);
 		
 		//draw rectangular shape of result of road detection
-		rectangle(image, HroadBorder.tl(), HroadBorder.br(), Scalar(255, 0, 0), 2, 8, 0);
-		line(image, HhalfFirstpoint, HhalfSecondPoint, Scalar(255, 0, 0), 1, 8, 0);
+		rectangle(image, HroadBorder.tl(), HroadBorder.br(), Scalar(255, 0, 0), 1, 8, 0);
+		//line(image, HhalfFirstpoint, HhalfSecondPoint, Scalar(255, 0, 0), 1, 8, 0);
 		
 		//curFrame=image(HROAD);
 		origFrame.copyTo(curFrame);
@@ -501,7 +506,7 @@ int main(int argc, char** argv) {
 				}
 			}
 		}
-		imshow("curFrame black", curFrame);
+		//imshow("curFrame black", curFrame);
 	    
 	
 		
@@ -513,10 +518,18 @@ int main(int argc, char** argv) {
 			     sobelImage=sobelDetection(curFrame);
 				 
 				 comboResultImage= Mat::zeros(origFrame.rows, origFrame.cols, CV_8U);
-				 comboResultImage=LKImage+sobelImage;
-				 imshow("combo result",comboResultImage);
-				 //searchForVehicle(LKImage, origFrame);
-				 //imshow("detect result", origFrame);		
+				  comboResultImage=LKImage+sobelImage;
+				// Mat tempResultBW;
+				 //comboResultImage.copyTo(tempResultBW);
+				//morphologyEx(comboResultImage,comboResultImage,MORPH_OPEN,Mat::ones(2,2,CV_8SC1),Point(1,1),BORDER_DEFAULT);
+			    imshow("combo result",comboResultImage);
+				
+				//searchForVehicle(comboResultImage, tempResultBW);
+				searchForVehicle(comboResultImage, origFrame);
+				imshow("detect result", origFrame);
+
+			
+				
 		 }
 		
 			prevFrame=curFrame;
