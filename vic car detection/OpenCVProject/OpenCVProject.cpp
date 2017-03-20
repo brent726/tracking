@@ -237,7 +237,7 @@ Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2){
 	dilate(fyft,fyft,dilateElement); */
    //imshow("dilate lines fyft",fyft);
 	 Mat sumfx2 = get_Sum9_Mat(fx2);
-	 imshow("sumfx2",sumfx2);
+	 //imshow("sumfx2",sumfx2);
 	// Mat sumfy2 = get_Sum9_Mat(fy2);
 	 //imshow("sumfy2",sumfy2);
 	 //Mat sumfxft = get_Sum9_Mat(fxft);
@@ -328,8 +328,8 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 					//printf("\n");
 
 					//if(width>50 && width <140 && height>30 && height<50)
-					//if((width>25 && width<120) && (height>20 && height<45))
-					//{
+					if((width>25 && width<120) && (height>20 && height<45))
+					{
 					Vehicle car;
 					
 					car.setXPos(moment.m10/area);
@@ -339,7 +339,7 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 					car.setTl(boundRect[index].tl());
 
 					vehicles.push_back(car);
-					//}
+					}
 				}
 			}
 			//draw object location on screen
@@ -373,7 +373,7 @@ Mat sobelDetection(Mat curFrame)
 				curFrameCpy.convertTo(gray,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 
 				GaussianBlur(gray, gray, Size(15,15), 0, 0, 1); //13, 13
-				//imshow("gray",gray);
+				imshow("gray",gray);
 				//Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, );
 				//Sobel( gray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
 				//convertScaleAbs( grad_x, abs_grad_x );
@@ -382,11 +382,11 @@ Mat sobelDetection(Mat curFrame)
 				convertScaleAbs( grad_y, abs_grad_y );
 				//addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
 				//cv::imshow("Sobel X", abs_grad_x);
-				cv::imshow("Sobel Y", abs_grad_y);
+				//cv::imshow("Sobel Y", abs_grad_y);
 				//cv::imshow("Sobel Image", grad);
-				//cv::threshold(abs_grad_y,thresholdImage,30,255,THRESH_BINARY);
-				cv::threshold(abs_grad_y,thresholdImage,20,255,THRESH_BINARY);
-				cv::imshow("Threshold Image", thresholdImage);
+				cv::threshold(abs_grad_y,thresholdImage,30,255,THRESH_BINARY);
+				//cv::threshold(abs_grad_y,thresholdImage,20,255,THRESH_BINARY);
+				//cv::imshow("Threshold Image", thresholdImage);
 			  
 				morphologyEx(thresholdImage,thresholdImage,MORPH_OPEN,Mat::ones(2,2,CV_8SC1),Point(1,1),2);
 
@@ -418,9 +418,9 @@ Mat LKDetection(Mat prevFrame, Mat curFrame)
 				LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 			
 				// imshow("gray LK",grayLK);
-				// cv::threshold(grayLK,thresholdImage,18,255,THRESH_BINARY);
-				cv::threshold(grayLK,thresholdImage,10,255,THRESH_BINARY);
-				cv::imshow("LK Threshold Image", thresholdImage);
+				 cv::threshold(grayLK,thresholdImage,18,255,THRESH_BINARY);
+				//cv::threshold(grayLK,thresholdImage,10,255,THRESH_BINARY);
+			    cv::imshow("LK Threshold Image", thresholdImage);
 				
 				return thresholdImage;
 			
@@ -449,9 +449,9 @@ int main(int argc, char** argv) {
 
   Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
  // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
- VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\DJI_0005Take2.MP4");
- // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0005Take2.MP4");
- //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0008Take1.MP4");
+ VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\dji\\DJI_0008Take1.MP4");
+  //DJI_0009Take3.MP4 DJI_0010Take4.MP4 DJI_0005Take2.MP4
+ //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0010.Take4.MP4");
 
   //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\1stVideoFeb8(edited).mp4");
   
@@ -462,7 +462,7 @@ int main(int argc, char** argv) {
   double i,j;
   Mat gray;
   Mat sobelImage, LKImage,comboResultImage;
-
+  int intersection=0;
   Mat image;
   while(true)
   {
@@ -481,9 +481,20 @@ int main(int argc, char** argv) {
 			HroadBotY = HroadBorder.br().y;
 			HROAD = Rect(HroadTopX, HroadTopY, (HroadBotX - HroadTopX), (HroadBotY - HroadTopY));//horizontal road dimensions
 
+			if(intersection == 1)
+			{ 
+				VroadBorder = roadDetectionVertical(image);
+				VroadTopX = VroadBorder.tl().x;
+				VroadTopY = VroadBorder.tl().y;
+				VroadBotX = VroadBorder.br().x;
+				VroadBotY = VroadBorder.br().y;
+				VROAD = Rect(VroadTopX, VroadTopY, (VroadBotX - VroadTopX), (VroadBotY - VroadTopY));//vertical road dimensions
+			}
+
+
 		//}
 
-
+		//imshow("road Image", image);
 		//horizontal
 		int halfY = (HroadBorder.br().y + HroadBorder.tl().y) / 2;
 		Point HhalfFirstpoint = Point(HroadBorder.tl().x, halfY);
@@ -521,8 +532,9 @@ int main(int argc, char** argv) {
 				  comboResultImage=LKImage+sobelImage;
 				// Mat tempResultBW;
 				 //comboResultImage.copyTo(tempResultBW);
+				  imshow("combo result",comboResultImage);
 				//morphologyEx(comboResultImage,comboResultImage,MORPH_OPEN,Mat::ones(2,2,CV_8SC1),Point(1,1),BORDER_DEFAULT);
-			    imshow("combo result",comboResultImage);
+			   //imshow("combo result",comboResultImage);
 				
 				//searchForVehicle(comboResultImage, tempResultBW);
 				searchForVehicle(comboResultImage, origFrame);
@@ -579,25 +591,26 @@ Rect roadDetectionHorizontal(Mat roadImage)
 	Mat im(roadImage.size().height, roadImage.size().width, CV_8UC1, Scalar(0));
 	Mat dstImg(roadImage.size().height, roadImage.size().width, CV_8UC1, Scalar(0));
 
-
-	Mat gradImage;
-	Mat roadBlurImage;
-	GaussianBlur(roadImage, roadImage, Size(17, 17), 0, 0, BORDER_DEFAULT);
+	Mat origFrame=roadImage.clone();
+	Mat roadImageBlur=roadImage.clone();
+	GaussianBlur(roadImageBlur, roadImageBlur, Size(17, 17), 0, 0, BORDER_DEFAULT);
 	/// Total Gradient (approximate)
 	//addWeighted(roadImage, 1, roadBlurImage, 1, 0, gradImage);
 
 	//imshow( "Road Image Sobel", roadImage );
 	//roadImage = gradImage.clone();
-	cvtColor(roadImage, labRoadImage, COLOR_BGR2Lab);
-	
+	cvtColor(roadImageBlur, labRoadImage, COLOR_BGR2Lab);
+	//imshow("lab uimage", labRoadImage);
 	
     for (x = 0;x<roadImage.size().width;x++)
 	{
 		for (y = 0;y<roadImage.size().height;y++)
 		{
-			if ((labRoadImage.at<Vec3b>(y, x)[1]>125) && (labRoadImage.at<Vec3b>(y, x)[1]<131))  // these threshold values must be tuned or determined automatically!
+			if ((labRoadImage.at<Vec3b>(y, x)[1]>125) && (labRoadImage.at<Vec3b>(y, x)[1]<133))  // straight these threshold values must be tuned or determined automatically!
+			//if ((labRoadImage.at<Vec3b>(y, x)[1]>118) && (labRoadImage.at<Vec3b>(y, x)[1]<135))
 			{
-				if ((labRoadImage.at<Vec3b>(y, x)[2]>120) && (labRoadImage.at<Vec3b>(y, x)[2]<129)) //these threshold values must be tuned or determined automatically!
+				if ((labRoadImage.at<Vec3b>(y, x)[2]>120) && (labRoadImage.at<Vec3b>(y, x)[2]<129)) //straight these threshold values must be tuned or determined automatically!
+				//if ((labRoadImage.at<Vec3b>(y, x)[2]>118) && (labRoadImage.at<Vec3b>(y, x)[2]<135))
 				{
 					//changing the pixel intensity to white
 					im.at<uchar>(y, x) = 255;
@@ -605,7 +618,7 @@ Rect roadDetectionHorizontal(Mat roadImage)
 			}
 		}
 	}
-
+	Mat threshold=im.clone();
 	//imshow("threshold", im);
 	// Create a structuring element (SE)
 	int morph_size = 2;
@@ -641,7 +654,7 @@ Rect roadDetectionHorizontal(Mat roadImage)
 		//printf("y:%d, percentage: %f\n",y,percentage);
 		//fprintf(f, " %d, %f\n", y, percentage);
 		
-		if (percentage >= 0.60)
+		if (percentage >= 0.62)
 		{
 			arrayPercentH[y] = 255;
 		}
@@ -696,7 +709,143 @@ Rect roadDetectionHorizontal(Mat roadImage)
 			bounding_rect = boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
 		}
 	}
-	drawContours(dstImg, contours, largest_contour_index, Scalar(255), 1, 8, hierarchy);
+	//drawContours(origFrame, contours, largest_contour_index, Scalar(255), 1, 8, hierarchy);
+	//imshow("largest area horizontal", origFrame);
+	return bounding_rect;
+}
+
+Rect roadDetectionVertical(Mat roadImage)
+{
+	
+	int x, y;
+	double area;
+	Rect bounding_rect;
+	vector<vector<Point>> contours;
+	vector<Vec4i> hierarchy;
+	Mat origFrame=roadImage.clone();
+	Mat roadImageBlur=roadImage.clone();
+	//imshow("origFrame", origFrame);
+	Mat dst;
+	Mat labRoadImage;
+	Mat im(roadImage.size().height, roadImage.size().width, CV_8UC1, Scalar(0));
+	Mat dstImg(roadImage.size().height, roadImage.size().width, CV_8UC1, Scalar(0));
+
+	
+	GaussianBlur(roadImageBlur, roadImageBlur, Size(3, 3), 0, 0, BORDER_DEFAULT);
+	/// Total Gradient (approximate)
+	
+
+	//imshow( "Road Image Sobel", gradImage );
+	cvtColor(roadImageBlur, labRoadImage, COLOR_BGR2Lab);
+	
+
+	for (x = 0; x<roadImage.size().width; x++)
+	{
+		for (y = 0; y<roadImage.size().height; y++)
+		{
+			if ((labRoadImage.at<Vec3b>(y, x)[1]>118) && (labRoadImage.at<Vec3b>(y, x)[1]<135))  // these threshold values must be tuned or determined automatically!
+			{
+				if ((labRoadImage.at<Vec3b>(y, x)[2]>118) && (labRoadImage.at<Vec3b>(y, x)[2]<135)) //these threshold values must be tuned or determined automatically!
+				{
+					//changing the pixel intensity to white
+					im.at<uchar>(y, x) = 255;
+				}
+			}
+		}
+	}
+
+	//imshow("threshold", im);
+	// Create a structuring element (SE)
+	int morph_size = 2;
+	Mat element = getStructuringElement(MORPH_RECT, Size(2 * morph_size + 1, 2 * morph_size + 1), Point(morph_size, morph_size));
+
+	for (int i = 0; i<2; i++)
+	{
+		morphologyEx(im, im, 2, element, Point(-1, -1), i);
+	}
+
+	//Canny(im,im,50,150);
+	//imshow("Canny Image", im);
+	//imshow("Image", im);
+	int counter = 0;
+	//int arrayPercentH[1280];
+	int arrayPercentV[1280];
+	float percentage;
+	x = 0; y = 0;
+	//FILE *f;
+	//f = fopen("frequency.txt", "w");
+	/*****for vertical*****/
+
+	for (int x = 0; x<im.size().width; x++)
+	{
+		for (y = 0, counter = 0; y<im.size().height; y++)
+		{
+			if (im.at<uchar>(y, x) == 255)  // these threshold values must be tuned or determined automatically!
+			{
+				counter++;
+			}
+		}
+		percentage = (float)counter / im.size().height;
+		//printf("y:%d, percentage: %f\n",y,percentage);
+		//fprintf(f, " %d, %f\n", y, percentage);
+
+		if (percentage >= 0.65)
+		{
+			arrayPercentV[x] = 255;
+		}
+		else
+		{
+			arrayPercentV[x] = 0;
+		}
+
+
+		//imshow("im",im);
+
+	}
+	/*****for vertical*****/
+
+
+	/***for vertical**/
+	for (int x = 0; x<im.size().width; x++)
+	{
+		for (y = 0; y<im.size().height; y++)
+		{
+			im.at<uchar>(y, x) = arrayPercentV[x];  // these threshold values must be tuned or determined automatically!
+		}
+	}
+	/***for verticaltal**/
+
+
+	//imshow("bin",im);
+
+	int dilate_size = 2;
+	Mat dilateElement = getStructuringElement(cv::MORPH_RECT, Size(2 * dilate_size + 1, 2 * dilate_size + 1), Point(dilate_size, dilate_size));
+
+	for (int i = 0; i<6; i++)
+	{
+		//Apply erosion or dilation on the image
+		dilate(im, im, dilateElement);
+	}
+	//imshow("Result Road Dilate",im);
+
+	double largest_area = 0;
+	double a;
+	int largest_contour_index;
+
+
+	findContours(im, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	for (int i = 0; i< contours.size(); i++)
+	{
+		a = contourArea(contours[i], false);  //  Find the area of contour
+		if (a>largest_area)
+		{
+			largest_area = a;
+			largest_contour_index = i;                //Store the index of largest contour
+			bounding_rect = boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
+		}
+	}
+	//drawContours(origFrame, contours, largest_contour_index, Scalar(255), 1, 8, hierarchy);
+	//imshow("largest area vertical", origFrame);
 	//imshow("largest area", dstImg);
 	return bounding_rect;
 }
