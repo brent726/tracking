@@ -220,7 +220,7 @@ Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat u, Mat v){
 	 //ft.convertTo(ft8u,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
 	 
      Mat fx2 = fx.mul(fx);
-	// imshow("fx2",fx2);
+	 //imshow("fx2",fx2);
 	 //imshow("dilate lines fx",fx);
      Mat fy2 = fy.mul(fy);
 	 //imshow("fy2",fy2);
@@ -237,7 +237,7 @@ Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat u, Mat v){
 	dilate(fyft,fyft,dilateElement); 
    //imshow("dilate lines fyft",fyft);
 	 Mat sumfx2 = get_Sum9_Mat(fx2);
-	//imshow("sumfx2",sumfx2);
+	imshow("sumfx2",sumfx2);
 	Mat sumfy2 = get_Sum9_Mat(fy2);
 	 //imshow("sumfy2",sumfy2);
 	Mat sumfxft = get_Sum9_Mat(fxft);
@@ -254,7 +254,7 @@ Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat u, Mat v){
 	//imshow("v",v);
     divide(u, tmp, u);
     divide(v, tmp, v);
-	imshow("u",u);
+	//imshow("u",u);
 	
 	 return sumfx2;
 }
@@ -448,7 +448,7 @@ int main(int argc, char** argv) {
  //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\DJI_0005Take2.MP4");
 // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0005Take2.MP4");
   //DJI_0009Take3.MP4 DJI_0010Take4.MP4 DJI_0005Take2.MP4 DJI_0011Take5.MP4 DJI_0008Take1.MP4
- VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0008Take1.MP4");
+ VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0010Take4.MP4");
 
   double fps = cap.get(CV_CAP_PROP_FPS);
   int framepos=0;
@@ -498,18 +498,17 @@ int main(int argc, char** argv) {
 		rectangle(image, HroadBorder.tl(), HroadBorder.br(), Scalar(255, 0, 0), 1, 8, 0);
 		//line(image, HhalfFirstpoint, HhalfSecondPoint, Scalar(255, 0, 0), 1, 8, 0);
 		image.copyTo(curFrame);
-		//cvtColor( curFrame, curFrame, COLOR_BGR2GRAY); 
+		cvtColor( curFrame, curFrame, COLOR_BGR2GRAY);
+
 		/*********for horizontal to blacken the sides*********/
 		//printf("tl=%d, br=%d", HroadBorder.tl().y, HroadBorder.br().y);
-		for (i = 0;i<image.size().width;i++)
+		for (i = 0;i<curFrame.size().width;i++)
 		{
-			for (j = 0;j<image.size().height;j++)
+			for (j = 0;j<curFrame.size().height;j++)
 			{
 				if ((j < HroadBorder.tl().y)||(j > HroadBorder.br().y))  // these threshold values must be tuned or determined automatically!
-				{
-					curFrame.at<Vec3b>(j, i)[0] = 0;
-					curFrame.at<Vec3b>(j, i)[1] = 0;
-					curFrame.at<Vec3b>(j, i)[2] = 0;
+				{	
+					curFrame.at<uchar>(j, i)= 0;
 				}
 			}
 		}
@@ -522,14 +521,14 @@ int main(int argc, char** argv) {
 				
 				  LKImage = LKDetection(prevFrame, curFrame, u, v);
 					
-			     //sobelImage=sobelDetection(curFrame);
+			      sobelImage=sobelDetection(curFrame);
 				// imshow("sobel", sobelImage);
 				 //comboResultImage= Mat::zeros(origFrame.rows, origFrame.cols, CV_8U);
-				  //comboResultImage=LKImage+sobelImage;
+				  comboResultImage=LKImage+sobelImage;
 				// Mat tempResultBW;
 				 //comboResultImage.copyTo(tempResultBW);
-				//morphologyEx(comboResultImage,comboResultImage,MORPH_OPEN,Mat::ones(2,2,CV_8SC1),Point(1,1),BORDER_DEFAULT);
-			   //imshow("combo result",comboResultImage);
+				morphologyEx(comboResultImage,comboResultImage,MORPH_OPEN,Mat::ones(2,2,CV_8SC1),Point(1,1),BORDER_DEFAULT);
+			   imshow("combo result",comboResultImage);
 				
 				//searchForVehicle(comboResultImage, tempResultBW);
 				//searchForVehicle(comboResultImage, origFrame);
@@ -579,9 +578,9 @@ Mat labThresholdingIntersection(Mat labRoadImage)
 	{
 		for (int y = 0;y<labRoadImage.size().height;y++)
 		{
-			if ((labRoadImage.at<Vec3b>(y, x)[1]>118) && (labRoadImage.at<Vec3b>(y, x)[1]<135))
+			if ((labRoadImage.at<Vec3b>(y, x)[1]>120) && (labRoadImage.at<Vec3b>(y, x)[1]<135))
 			{
-				if ((labRoadImage.at<Vec3b>(y, x)[2]>118) && (labRoadImage.at<Vec3b>(y, x)[2]<135))
+				if ((labRoadImage.at<Vec3b>(y, x)[2]>120) && (labRoadImage.at<Vec3b>(y, x)[2]<135))
 				{
 					//changing the pixel intensity to white
 					im.at<uchar>(y, x) = 255;
@@ -846,8 +845,8 @@ Rect roadDetectionVertical(Mat roadImage)
 			bounding_rect = boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
 		}
 	}
-	//drawContours(origFrame, contours, largest_contour_index, Scalar(255), 1, 8, hierarchy);
-	//imshow("largest area vertical", origFrame);
+	drawContours(origFrame, contours, largest_contour_index, Scalar(255), 1, 8, hierarchy);
+	imshow("largest area vertical", origFrame);
 	//imshow("largest area", dstImg);
 	return bounding_rect;
 }
