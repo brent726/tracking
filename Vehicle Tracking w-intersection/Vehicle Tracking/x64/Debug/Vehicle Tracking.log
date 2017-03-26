@@ -1,0 +1,47 @@
+﻿Build started 3/21/2017 9:06:45 PM.
+     1>Project "D:\Vehicle Tracking w-intersection\Vehicle Tracking\Vehicle Tracking.vcxproj" on node 2 (Build target(s)).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (VideoStab.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Fo"x64\Debug\\" /Fd"x64\Debug\vc140.pdb" /Gd /TP /errorReport:prompt Source.cpp
+         Source.cpp
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(454): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(482): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(483): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(484): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(485): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(512): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(540): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(541): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(542): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(543): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(632): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(633): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(717): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(720): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(723): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(748): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(886): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(887): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(899): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(900): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(901): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1063): warning C4101: 'i': unreferenced local variable
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1144): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1145): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1157): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1158): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1159): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1218): warning C4101: 'y': unreferenced local variable
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1219): warning C4101: 'area': unreferenced local variable
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1347): warning C4101: 'area': unreferenced local variable
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1511): warning C4101: 'j': unreferenced local variable
+     1>d:\vehicle tracking w-intersection\vehicle tracking\source.cpp(1511): warning C4101: 'i': unreferenced local variable
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Vehicle Tracking w-intersection\x64\Debug\Vehicle Tracking.exe" /INCREMENTAL /NOLOGO opencv_world310d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"D:\Vehicle Tracking w-intersection\x64\Debug\Vehicle Tracking.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Vehicle Tracking w-intersection\x64\Debug\Vehicle Tracking.lib" /MACHINE:X64 x64\Debug\Source.obj
+         x64\Debug\Vehicle.obj
+         Vehicle Tracking.vcxproj -> D:\Vehicle Tracking w-intersection\x64\Debug\Vehicle Tracking.exe
+     1>Done Building Project "D:\Vehicle Tracking w-intersection\Vehicle Tracking\Vehicle Tracking.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:01.17
