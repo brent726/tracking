@@ -65,14 +65,14 @@ void addPoints(int x, int y);
 string intToString(int number);
 void drawObject(vector<Vehicle> VehicleCars, Mat &frame);
 void searchForVehicle(Mat thresholdImage, vector<Vehicle> &vehicles);
-Rect roadDetectionHorizontal(Mat labRoadImage, int intersection);
+Rect roadDetectionHorizontal(Mat labRoadImage);
 Rect roadDetectionVertical(Mat roadImage);
 Scalar speedSpectrum(double speed);
 Mat sobelDetection(Mat curFrame);
 void setLabel(cv::Mat& im, const std::string label, const cv::Point & pointor);
 Point2i vehicleCountTopAndBot(vector<Vehicle> &vehicles, int halfY);
-Mat roadDetectionPreprocessing (Mat roadImage);
-
+Mat roadDetectionPreprocessing (Mat roadImage, int orientation);
+Mat addCenterLinesHorizontal(Mat binRoadImage);
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
      if  ( event == EVENT_LBUTTONDOWN )
@@ -90,189 +90,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
     
 }
 
-Mat get_fx(Mat &src1, Mat &src2)
-{
-	Mat fx;
-	Mat kernel= Mat::ones(2,2,CV_64FC1);
-	//Mat kernel= Mat::ones(2,2,CV_8U);
-	kernel.ATD(0,0)=-1.0;
-	kernel.ATD(1, 0) = -1.0;
 
-
-	Mat dst1, dst2;
-	filter2D(src1,dst1,-1,kernel);
-	filter2D(src2, dst2,-1, kernel );
-
-	fx=dst1+dst2;
-	//imshow("fx dst1",dst1);
-	//imshow("fx",fx);
-	return fx;
-
-}
-
-Mat get_fy(Mat &src1, Mat &src2){
-    Mat fy;
-    Mat kernel = Mat::ones(2, 2, CV_64FC1);
-	//Mat kernel = Mat::ones(2, 2, CV_8U);
-    kernel.ATD(0, 0) = -1.0;
-    kernel.ATD(0, 1) = -1.0;
-
-    Mat dst1, dst2;
-    filter2D(src1, dst1, -1, kernel);
-    filter2D(src2, dst2, -1, kernel);
-	 
-    fy = dst1 + dst2;
-
-	//imshow("fy dst1",dst1);
-	//imshow("fy",fy);
-    return fy;
-}
-
-Mat get_ft(Mat &src1, Mat &src2){
-    Mat ft;
-    Mat kernel = Mat::ones(2, 2, CV_64FC1);
-	//Mat kernel = Mat::ones(2, 2, CV_8U);
-    kernel = kernel.mul(-1);
-
-    Mat dst1, dst2;
-    filter2D(src1, dst1, -1, kernel);
-    kernel = kernel.mul(-1);
-    filter2D(src2, dst2, -1, kernel);
-
-    ft = dst1 + dst2;
-	//imshow("ft dst1",dst1);
-	//imshow("ft dst2",dst2);
-	//imshow("ft",ft);
-    return ft;
-}
-bool isInsideImage(int y, int x, Mat &m){
-    int width = m.cols;
-    int height = m.rows;
-    if(x >= 0 && x < width && y >= 0 && y < height) return true;
-    else return false;
-}
-
-double get_Sum9(Mat &m, int y, int x)
-{
-	if(x < 0 || x >= m.cols) return 0;
-    if(y < 0 || y >= m.rows) return 0;
-
-	double val=0.0;
-	int tmp=0;
-	if(isInsideImage(y-1,x-1,m))
-	{
-		++tmp;
-		val+=m.ATD(y-1,x-1);
-	}
-	if(isInsideImage(y - 1, x, m)){
-        ++ tmp;
-        val += m.ATD(y - 1, x);
-    }
-	 if(isInsideImage(y - 1, x + 1, m)){
-        ++ tmp;
-        val += m.ATD(y - 1, x + 1);
-    }
-    if(isInsideImage(y, x - 1, m)){
-        ++ tmp;
-        val += m.ATD(y, x - 1);
-    }
-    if(isInsideImage(y, x, m)){
-        ++ tmp;
-        val += m.ATD(y, x);
-    }
-    if(isInsideImage(y, x + 1, m)){
-        ++ tmp;
-        val += m.ATD(y, x + 1);
-    }
-    if(isInsideImage(y + 1, x - 1, m)){
-        ++ tmp;
-        val += m.ATD(y + 1, x - 1);
-    }
-    if(isInsideImage(y + 1, x, m)){
-        ++ tmp;
-        val += m.ATD(y + 1, x);
-    }
-    if(isInsideImage(y + 1, x + 1, m)){
-        ++ tmp;
-        val += m.ATD(y + 1, x + 1);
-    }
-    if(tmp == 9) return val;
-    else return m.ATD(y, x) * 9;
-}
-Mat get_Sum9_Mat(Mat &m){
-   Mat res = Mat::zeros(m.rows, m.cols, CV_64FC1);
-   //Mat res = Mat::zeros(m.rows, m.cols, CV_8U);
-    for(int i = 1; i < m.rows - 1; i++){
-        for(int j = 1; j < m.cols - 1; j++){
-            res.ATD(i, j) = get_Sum9(m, i, j);
-        }
-    }
-    return res;
-}
-Mat getLucasKanadeOpticalFlow(Mat &img1, Mat &img2, Mat u, Mat v){
-	
-    Mat fx = get_fx(img1, img2);
-    Mat ft = get_ft(img1, img2);
-	Mat fy = get_fy(img1, img2);
-	 //imshow("ft",ft);
-	//imshow("fx",fx);
-	//imshow("fx",fx);
-	//imshow("fy",fy);
-	// Mat ft8u;
-	 //ft.convertTo(ft8u,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
-	 
-     Mat fx2 = fx.mul(fx);
-	 //imshow("fx2",fx2);
-	 //imshow("dilate lines fx",fx);
-     Mat fy2 = fy.mul(fy);
-	 //imshow("fy2",fy2);
-     Mat fxfy = fx.mul(fy);
-	//imshow("fxfy",fxfy);
-    Mat fxft = fx.mul(ft);
-	//imshow("fxft",fxft);
-
-	 
-    Mat fyft = fy.mul(ft);
-	 //imshow("fyft",fyft);
-	 int dilate_size = 2;  
-    Mat dilateElement = getStructuringElement(cv::MORPH_RECT,Size(2 * dilate_size + 1, 2* dilate_size + 1),Point(dilate_size, dilate_size) );
-	dilate(fyft,fyft,dilateElement); 
-   //imshow("dilate lines fyft",fyft);
-	 Mat sumfx2 = get_Sum9_Mat(fx2);
-
-	 //imshow("sumfx2",sumfx2);
-	// Mat sumfy2 = get_Sum9_Mat(fy2);
-
-	//imshow("sumfx2",sumfx2);
-	Mat sumfy2 = get_Sum9_Mat(fy2);
-
-	 //imshow("sumfy2",sumfy2);
-	Mat sumfxft = get_Sum9_Mat(fxft);
-	//imshow("sumfxft",sumfxft);
-    Mat sumfxfy = get_Sum9_Mat(fxfy);
-	 //imshow("sumfxfy",sumfxfy);
-     Mat sumfyft = get_Sum9_Mat(fyft);
-
-	 //imshow("resultn sum fx and fy", resultfx2fy2);
-	Mat tmp = sumfx2.mul(sumfy2) - sumfxfy.mul(sumfxfy);
-	// imshow("tmp",tmp);
-    u = sumfxfy.mul(sumfyft) - sumfy2.mul(sumfxft);
-	v = sumfxft.mul(sumfxfy) - sumfx2.mul(sumfyft);
-	//imshow("v",v);
-    divide(u, tmp, u);
-    divide(v, tmp, v);
-	//imshow("u",u);
-	
-	 return sumfx2;
-}
-//int to string helper function
-string intToString(int number){
-
-	//this function has a number input and string output
-	std::stringstream ss;
-	ss << number;
-	return ss.str();
-}
 
 void drawObject(vector<Vehicle> VehicleCars,Mat &frame){
 
@@ -285,7 +103,6 @@ void drawObject(vector<Vehicle> VehicleCars,Mat &frame){
 	//cv::putText(frame,intToString(VehicleCars.at(i).getID()),cv::Point(VehicleCars.at(i).getXPos(),VehicleCars.at(i).getYPos()+20),1,1,Scalar(0,255,0));
 	}
 	cv::putText(frame,"Number of Vehicles: "+intToString(VehicleCars.size()),cv::Point(20,20),1,1,Scalar(0,255,0));
-	//printf("Number of Vehicles : %d",VehicleCars.size());
 }
 
 void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
@@ -357,44 +174,6 @@ void searchForVehicle(Mat thresholdImage, Mat &cameraFeed){
 
 }
 
-Mat LKDetection(Mat prevFrame, Mat curFrame, Mat u, Mat v)
-{
-				int i;
-				 Mat thresholdImage;
-				 Mat frameCurOrig;
-				Size img_sz = curFrame.size();
-				frameCurOrig=curFrame.clone(); 
-				//imshow("curFrame",curFrame);
-				//Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				//Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				//Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
-				//Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_8U);
-
-				/***************LK**********************/
-				Mat grayLK;
-				double  minVal,  maxVal;
-				curFrame.convertTo(curFrame, CV_64F, 1.0/255);
-				prevFrame.convertTo(prevFrame, CV_64F, 1.0/255);
-				GaussianBlur(prevFrame, prevFrame, Size(3, 3), 0, 0, BORDER_DEFAULT);
-				GaussianBlur(curFrame, curFrame, Size(3, 3), 0, 0, BORDER_DEFAULT);
-				//imshow("curFrame", curFrame);
-				Mat LKResultImage=getLucasKanadeOpticalFlow(prevFrame, curFrame, u, v);
-				//minMaxLoc(LKResultImage,  &minVal,  &maxVal);  //find  minimum  and  maximum  intensities
-				//LKResultImage.convertTo(grayLK,  CV_8U,  255.0/(maxVal  -  minVal),  -minVal);
-			
-				// imshow("gray LK",grayLK);
-
-				// cv::threshold(grayLK,thresholdImage,18,255,THRESH_BINARY);
-				//cv::threshold(grayLK,thresholdImage,10,255,THRESH_BINARY);
-				//cv::imshow("LK Threshold Image", thresholdImage);
-
-				
-				return LKResultImage;
-			
-
-}
-
-
 int main(int argc, char** argv) {
   // Initialize, load two images from the file system, and
   // allocate the images and other structures we will need for
@@ -409,9 +188,9 @@ int main(int argc, char** argv) {
   Mat curFrame, prevFrame,prevResultFrame, curResultFrame;
  // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\sampleVideo.avi");
 
- VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\DJI\\DJI_0014.MP4");
+ //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\DJI\\DJI_0014.MP4");
   //DJI_0009Take3.MP4 DJI_0010Take4.MP4 DJI_0005Take2.MP4 DJI_0008Take1.mp4
- //VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0010.Take4.MP4");
+ VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0014.MP4");
 
  //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\DJI_0005Take2.MP4");
 // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0005Take2.MP4");
@@ -426,9 +205,9 @@ int main(int argc, char** argv) {
   Mat gray;
   Mat labRoadImage;
   Mat sobelImage, LKImage,comboResultImage;
-  int intersection=0;
+  int intersection=01;
   printf("Intersection= %d",intersection);
-  Mat image;
+  Mat image, labRoadImageVertical;
   while(true)
   {
 	      
@@ -436,45 +215,45 @@ int main(int argc, char** argv) {
 		  image.copyTo(origFrame);// for final output
 		 framepos=(int)cap.get(CV_CAP_PROP_POS_FRAMES);
 		  //road detection
-		/*if (framepos == 1 || framepos % 10 == 0)
-		{*/
-			labRoadImage=roadDetectionPreprocessing (image);
-			HroadBorder = roadDetectionHorizontal(labRoadImage, intersection);
+		if (framepos == 1 || framepos % 10 == 0)
+		{
+			/*labRoadImage=roadDetectionPreprocessing (image,0);
+			HroadBorder = roadDetectionHorizontal(labRoadImage);
 			HroadTopX = HroadBorder.tl().x;
 			HroadTopY = HroadBorder.tl().y;
 			HroadBotX = HroadBorder.br().x;
 			HroadBotY = HroadBorder.br().y;
-			HROAD = Rect(HroadTopX, HroadTopY, (HroadBotX - HroadTopX), (HroadBotY - HroadTopY));//horizontal road dimensions
+			HROAD = Rect(HroadTopX, HroadTopY, (HroadBotX - HroadTopX), (HroadBotY - HroadTopY));//horizontal road dimensions*/
 
 			if(intersection == 1)
 			{ 
-				VroadBorder = roadDetectionVertical(labRoadImage);
+				labRoadImageVertical=roadDetectionPreprocessing (image,1);
+				VroadBorder = roadDetectionVertical(labRoadImageVertical);
 				VroadTopX = VroadBorder.tl().x;
 				VroadTopY = VroadBorder.tl().y;
 				VroadBotX = VroadBorder.br().x;
 				VroadBotY = VroadBorder.br().y;
-				VROAD = Rect(VroadTopX, VroadTopY, (VroadBotX - VroadTopX), (VroadBotY - VroadTopY));//vertical road dimensions
+				VROAD = Rect(VroadTopX, VroadTopY, (VroadBotX - VroadTopX), (VroadBotY - VroadTopY));//vertical road dimensions*/
 			}
 
 
-		//}
+		}
 
-		//imshow("road Image", image);
 		//horizontal
 		int halfY = (HroadBorder.br().y + HroadBorder.tl().y) / 2;
-		//Point HhalfFirstpoint = Point(HroadBorder.tl().x, halfY);
-		//Point HhalfSecondPoint = Point(HroadBorder.br().x, halfY);
+		Point HhalfFirstpoint = Point(HroadBorder.tl().x, halfY);
+		Point HhalfSecondPoint = Point(HroadBorder.br().x, halfY);
 		
 		//draw rectangular shape of result of road detection
 		rectangle(image, HroadBorder.tl(), HroadBorder.br(), Scalar(255, 0, 0), 1, 8, 0);
 		imshow("road Image", image);
 		//line(image, HhalfFirstpoint, HhalfSecondPoint, Scalar(255, 0, 0), 1, 8, 0);
-		image.copyTo(curFrame);
-		cvtColor( curFrame, curFrame, COLOR_BGR2GRAY);
+		//image.copyTo(curFrame);
+		//cvtColor( curFrame, curFrame, COLOR_BGR2GRAY);
 
 		/*********for horizontal to blacken the sides*********/
 		//printf("tl=%d, br=%d", HroadBorder.tl().y, HroadBorder.br().y);
-		for (i = 0;i<curFrame.size().width;i++)
+		/*for (i = 0;i<curFrame.size().width;i++)
 		{
 			for (j = 0;j<curFrame.size().height;j++)
 			{
@@ -483,18 +262,18 @@ int main(int argc, char** argv) {
 					curFrame.at<uchar>(j, i)= 0;
 				}
 			}
-		}
+		}*/
 		
 		//imshow("curFrame black", curFrame);
 		/*********for horizontal to blacken the sides*********/
 		if(framepos!=1)
 		 {
-				 Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
-				 Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
+				 //Mat u = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
+				// Mat v = Mat::zeros(prevFrame.rows, prevFrame.cols, CV_64FC1);
 				
 				 // LKImage = LKDetection(prevFrame, curFrame, u, v);
 					
-			      sobelImage=sobelDetection(curFrame);
+			      //sobelImage=sobelDetection(curFrame);
 				// imshow("sobel", sobelImage);
 				 //comboResultImage= Mat::zeros(origFrame.rows, origFrame.cols, CV_8U);
 				  //comboResultImage=LKImage+sobelImage;
@@ -502,14 +281,14 @@ int main(int argc, char** argv) {
 				 //comboResultImage.copyTo(tempResultBW);
 				
 				//searchForVehicle(comboResultImage, tempResultBW);
-				searchForVehicle(sobelImage, origFrame);
-				imshow("detect result", origFrame);
+				//searchForVehicle(sobelImage, origFrame);
+				//imshow("detect result", origFrame);
 
 			
 				
 		 }
 		
-			prevFrame=curFrame;
+			//prevFrame=curFrame;
 			//prevFrame.convertTo(prevFrame, CV_64F, 1.0/255);
 			//imshow("prev frame", prevFrame);
 			 // system("PAUSE");
@@ -542,35 +321,15 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
-Mat labThresholdingIntersection(Mat labRoadImage)
-{
-	Mat im(labRoadImage.size().height, labRoadImage.size().width, CV_8UC1, Scalar(0));
-	for (int x = 0; x<labRoadImage.size().width; x++)
-	{
-		for (int y = 0; y<labRoadImage.size().height; y++)
-		{
-			//if ((labRoadImage.at<Vec3b>(y, x)[1]>118) && (labRoadImage.at<Vec3b>(y, x)[1]<135))
-			//if ((labRoadImage.at<Vec3b>(y, x)[1]>122) && (labRoadImage.at<Vec3b>(y, x)[1]<131))
-			//if ((labRoadImage.at<Vec3b>(y, x)[1]>125) && (labRoadImage.at<Vec3b>(y, x)[1]<131))  // these threshold values must be tuned or determined automatically!
-			{
-				//if ((labRoadImage.at<Vec3b>(y, x)[2]>120) && (labRoadImage.at<Vec3b>(y, x)[2]<128)) //these threshold values must be tuned or determined automatically!
-				//if ((labRoadImage.at<Vec3b>(y, x)[2]>118) && (labRoadImage.at<Vec3b>(y, x)[2]<135))
-				//if ((labRoadImage.at<Vec3b>(y, x)[2]>118) && (labRoadImage.at<Vec3b>(y, x)[2]<129))
-				{
-					//changing the pixel intensity to white
-					im.at<uchar>(y, x) = 255;
-				}
-			}
-			//if ((labRoadImage.at<Vec3b>(y, x)[1]>125) && (labRoadImage.at<Vec3b>(y, x)[1]<131))  // these threshold values must be tuned or determined automatically!
-			//{
-				//if ((labRoadImage.at<Vec3b>(y, x)[2]>105) && (labRoadImage.at<Vec3b>(y, x)[2]<128)) //these threshold values must be tuned or determined automatically!
-					//changing the pixel intensity to white
-					//im.at<uchar>(y, x) = 255;
-			//}
-		}
-	}
-	return im;
+//int to string helper function
+string intToString(int number){
+
+	//this function has a number input and string output
+	std::stringstream ss;
+	ss << number;
+	return ss.str();
 }
+
 Mat labThresholdingStraight(Mat labRoadImage)
 {
 	int x, y;
@@ -579,16 +338,6 @@ Mat labThresholdingStraight(Mat labRoadImage)
 	{
 		for (y = 0; y<labRoadImage.size().height; y++)
 		{
-			//if ((labRoadImage.at<Vec3b>(y, x)[1]>122) && (labRoadImage.at<Vec3b>(y, x)[1]<131))  // straight these threshold values must be tuned or determined automatically!
-			//{
-				//if ((labRoadImage.at<Vec3b>(y, x)[2]>118) && (labRoadImage.at<Vec3b>(y, x)[2]<129)) //straight these threshold values must be tuned or determined automatically!
-				//{
-			//if ((labRoadImage.at<Vec3b>(y, x)[1]>125) && (labRoadImage.at<Vec3b>(y, x)[1]<131))  // these threshold values must be tuned or determined automatically!
-			//{
-				//if ((labRoadImage.at<Vec3b>(y, x)[2]>120) && (labRoadImage.at<Vec3b>(y, x)[2]<128)) //these threshold values must be tuned or determined automatically!
-					//changing the pixel intensity to white
-					//im.at<uchar>(y, x) = 255;
-			//}
 			if ((labRoadImage.at<Vec3b>(y, x)[1]>125) && (labRoadImage.at<Vec3b>(y, x)[1]<131))  // these threshold values must be tuned or determined automatically!
 			{
 				if ((labRoadImage.at<Vec3b>(y, x)[2]>120) && (labRoadImage.at<Vec3b>(y, x)[2]<128)) //these threshold values must be tuned or determined automatically!
@@ -601,30 +350,112 @@ Mat labThresholdingStraight(Mat labRoadImage)
 
 }
 
-Mat roadDetectionPreprocessing (Mat roadImage)
+Mat roadDetectionPreprocessing (Mat roadImage, int orientation)
 {
 	Mat labRoadImage;
-	Mat roadImageBlur, hsvRoadImage;
+	Mat roadImageBlur;
 	GaussianBlur(roadImage, roadImageBlur, Size(21, 21), 0, 0, BORDER_DEFAULT);
 	cvtColor(roadImageBlur, labRoadImage, COLOR_BGR2Lab);
 
-	int imageCenter=roadImage.size().height/2;
-	for (int x = 0; x<labRoadImage.size().width; x++)
+	int imageCenter;
+	
+	//horizontal
+	if(orientation==0)
 	{
-		for (int y = 0;y<labRoadImage.size().height; y++)
+		imageCenter=roadImage.size().height/2;
+		for (int x = 0; x<labRoadImage.size().width; x++)
 		{
-			if(y==imageCenter)
+			for (int y = 0;y<labRoadImage.size().height; y++)
 			{
-				labRoadImage.at<Vec3b>(y, x)[1]=127;
-				labRoadImage.at<Vec3b>(y, x)[2]=127;
-			}
+				if(y==imageCenter)
+				{
+					labRoadImage.at<Vec3b>(y, x)[1]=127;
+					labRoadImage.at<Vec3b>(y, x)[2]=127;
+				}
 
+			}
+		}
+	}
+	//vertical
+	if(orientation==1)
+	{
+		imageCenter=roadImage.size().width/2;
+		for (int y = 0; y<labRoadImage.size().height; y++)
+		{
+			for (int x = 0; x<labRoadImage.size().width; x++)
+			{
+				if(x==imageCenter)
+				{
+					labRoadImage.at<Vec3b>(y, x)[1]=127;
+					labRoadImage.at<Vec3b>(y, x)[2]=127;
+				}
+
+			}
 		}
 	}
 	return labRoadImage;
 
 }
-Rect roadDetectionHorizontal(Mat labRoadImage, int intersection)
+Mat addCenterLinesHorizontal(Mat binRoadImage)
+{
+	int imageCenter=binRoadImage.size().height/2;
+	int yCenter=0;
+	int centerIncrement=imageCenter+1;
+	int centerDecrement=imageCenter-1;
+	Mat tempResultLowerPortion=Mat::zeros(binRoadImage.rows, binRoadImage.cols, CV_8U);
+	Mat tempResultUpperPortion=Mat::zeros(binRoadImage.rows, binRoadImage.cols, CV_8U);
+	int flagCopy=0;
+		for (int y = 0;y<binRoadImage.size().height; y++)
+		{
+			if(y==imageCenter)
+			{
+				while((binRoadImage.at<uchar>(centerIncrement,yCenter)==0))
+				{
+						for (yCenter = 0; yCenter<binRoadImage.size().width; yCenter++)
+					    {
+								tempResultLowerPortion.at<uchar>(centerIncrement, yCenter) = 225;  // these threshold values must be tuned or determined automatically!
+						}
+						yCenter=0;
+					    centerIncrement++;
+						if(centerIncrement==(imageCenter+80))
+						{
+							flagCopy=1;
+							break;
+						}
+				}
+				if(flagCopy==0)
+				{
+					binRoadImage=binRoadImage+tempResultLowerPortion;
+				}
+				yCenter=0;
+				flagCopy=0;
+				while( (binRoadImage.at<uchar>(centerDecrement,yCenter)==0))
+				{
+					for (yCenter = 0; yCenter<binRoadImage.size().width; yCenter++)
+					{
+							tempResultUpperPortion.at<uchar>(centerDecrement, yCenter) = 225;  // these threshold values must be tuned or determined automatically!
+					}
+					yCenter=0;
+					centerDecrement--;		
+				    if(centerDecrement==(imageCenter-80))
+					{
+						flagCopy=1;
+						break;
+					}
+				}
+				if(flagCopy==0)
+				{
+					binRoadImage=binRoadImage+tempResultUpperPortion;
+				}
+				flagCopy=0;
+			}
+		}
+		//imshow("tempResultUpperPortion", tempResultUpperPortion);
+		//imshow("tempResulLowerPortion", tempResultLowerPortion);
+		return binRoadImage;
+		
+}
+Rect roadDetectionHorizontal(Mat labRoadImage)
 {
 	int x, y;
 	double area;
@@ -634,7 +465,6 @@ Rect roadDetectionHorizontal(Mat labRoadImage, int intersection)
 	Mat origFrame = labRoadImage.clone();
 	Mat dst;
 	Mat im;
-	
 
 		im = labThresholdingStraight(labRoadImage);
 
@@ -691,62 +521,36 @@ Rect roadDetectionHorizontal(Mat labRoadImage, int intersection)
 	/***for horizontal**/
 
 	
-	imshow("bin adding white",im);
+	//imshow("bin before adding white",im);
+	
+	
+	//}
+	addCenterLinesHorizontal(im);
+	imshow("bin after adding white",im);
 	
 	int imageCenter=im.size().height/2;
-	int xCenter=0;
-	int centerIncrement=imageCenter+1;
-	int centerDecrement=imageCenter-1;
-	//for (int x = 0; x<im.size().width; x++)
-	//{
-		for (int y = 0;y<im.size().height; y++)
-		{
-			if(y==imageCenter)
-			{
-				while((im.at<uchar>(centerIncrement,xCenter)==0))
-				{
-						for (xCenter = 0; xCenter<im.size().width; xCenter++)
-					    {
-								im.at<uchar>(centerIncrement, xCenter) = 225;  // these threshold values must be tuned or determined automatically!
-						}
-						xCenter=0;
-					centerIncrement++;
-				}
-				xCenter=0;
-				//while( (im.at<uchar>(centerDecrement,xCenter)==0))
-				{
-					//for (xCenter = 0; xCenter<im.size().width; xCenter++)
-					{
-							//im.at<uchar>(centerDecrement, xCenter) = 225;  // these threshold values must be tuned or determined automatically!
-					}
-					//xCenter=0;
-					//centerDecrement--;		
-				}
-			}
-
-		}
-	//}
-	imshow("bin after adding white",im);
 	int dilate_size = 2;
-	 Mat dilateElement = getStructuringElement( MORPH_RECT, Size( 2*dilate_size + 1, 2*dilate_size+1 ), Point( dilate_size, dilate_size ) );
-	for (int i = 0; i<3; i++)
-	{
-		//Apply erosion or dilation on the image
-		dilate(im, im, dilateElement);
-	}
-	imshow("Result Road Dilate",im);
+	Mat dilateElement = getStructuringElement( MORPH_RECT, Size( 2*dilate_size + 1, 2*dilate_size+1 ), Point( dilate_size, dilate_size ) );
+		
+				for (int i = 0; i<4; i++)
+				{
+					//Apply erosion or dilation on the image
+					dilate(im, im, dilateElement);
+				}
+			
+			
 
-
-
+		
+	//imshow("Result Road Dilate",im);
 
 	double largest_area = 0;
 	double a;
 	int largest_contour_index;
 
 
-	findContours(im, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-	for (int i = 0; i< contours.size(); i++)
-	{
+     findContours(im, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+	 for (int i = 0; i< contours.size(); i++)
+	 {
 		a = contourArea(contours[i], false);  //  Find the area of contour
 		if (a>largest_area)
 		{
@@ -760,40 +564,26 @@ Rect roadDetectionHorizontal(Mat labRoadImage, int intersection)
 	return bounding_rect;
 }
 
-Rect roadDetectionVertical(Mat roadImage)
+Rect roadDetectionVertical(Mat labRoadImage)
 {
 	int x, y;
 	double area;
 	Rect bounding_rect;
 	vector<vector<Point>> contours;
 	vector<Vec4i> hierarchy;
-	Mat origFrame = roadImage.clone();
+	//Mat origFrame = roadImage.clone();
 	//imshow("origFrame", origFrame);
 	Mat dst;
-	Mat labRoadImage;
-	Mat im(roadImage.size().height, roadImage.size().width, CV_8UC1, Scalar(0));
-	Mat dstImg(roadImage.size().height, roadImage.size().width, CV_8UC1, Scalar(0));
 
-	im = labThresholdingIntersection(labRoadImage);
-	// Create a structuring element (SE)
-	int morph_size = 2;
-	Mat element = getStructuringElement(MORPH_RECT, Size(2 * morph_size + 1, 2 * morph_size + 1), Point(morph_size, morph_size));
+	Mat im(labRoadImage.size().height, labRoadImage.size().width, CV_8UC1, Scalar(0));
 
-	for (int i = 0; i<2; i++)
-	{
-		morphologyEx(im, im, 2, element, Point(-1, -1), i);
-	}
+	im = labThresholdingStraight(labRoadImage);
+	imshow("threshold",im);
 
-	//Canny(im,im,50,150);
-	//imshow("Canny Image", im);
-	//imshow("Image", im);
 	int counter = 0;
-	//int arrayPercentH[1280];
 	int arrayPercentV[1280];
 	float percentage;
-	x = 0; y = 0;
-	//FILE *f;
-	//f = fopen("frequency.txt", "w");
+
 	/*****for vertical*****/
 
 	for (int x = 0; x<im.size().width; x++)
@@ -816,14 +606,8 @@ Rect roadDetectionVertical(Mat roadImage)
 			arrayPercentV[x] = 0;
 		}
 
-
-		//imshow("im a",im);
-
 	}
 	/*****for vertical*****/
-
-
-	/***for vertical**/
 	for (int x = 0; x<im.size().width; x++)
 	{
 		for (y = 0; y<im.size().height; y++)
@@ -831,42 +615,12 @@ Rect roadDetectionVertical(Mat roadImage)
 			im.at<uchar>(y, x) = arrayPercentV[x];  // these threshold values must be tuned or determined automatically!
 		}
 	}
-	/***for verticaltal**/
+	/***for vertical**/
 
 
-	imshow("bin",im);
+	imshow("bin before adding white",im);
 
-	int dilate_size = 2;
-	Mat dilateElement = getStructuringElement(cv::MORPH_RECT, Size(2 * dilate_size + 1, 2 * dilate_size + 1), Point(dilate_size, dilate_size));
-
-	for (int i = 0; i<3; i++)
-	{
-		//Apply erosion or dilation on the image
-		dilate(im, im, dilateElement);
-	}
-	//imshow("Result Road Dilate",im);
-
-	double largest_area = 0;
-	double a;
-	int largest_contour_index;
-
-
-	findContours(im, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
-	for (int i = 0; i< contours.size(); i++)
-	{
-		a = contourArea(contours[i], false);  //  Find the area of contour
-		bounding_rect = boundingRect(contours[i]);
-		
-		if (a>largest_area)
-		{
-			largest_area = a;
-			largest_contour_index = i;                //Store the index of largest contour
-			bounding_rect = boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
-		}
-	}
-	drawContours(origFrame, contours, largest_contour_index, Scalar(255), 1, 8, hierarchy);
-    imshow("largest area vertical", origFrame);
-	//imshow("largest area", dstImg);
+	
 	return bounding_rect;
 }
 
