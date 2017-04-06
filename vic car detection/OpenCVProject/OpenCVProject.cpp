@@ -192,7 +192,7 @@ int main(int argc, char** argv) {
 
  //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\DJI\\DJI_0014.MP4");
   //DJI_0009Take3.MP4 DJI_0010Take4.MP4 DJI_0005Take2.MP4 DJI_0008Take1.mp4
- VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0014.MP4");
+ VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0010.MP4");
 
  //VideoCapture cap("\\\\Mac\\Home\\Desktop\\DroneVideos\\DJI_0005Take2.MP4");
 // VideoCapture cap("C:\\Users\\PCBLAB_01\\Desktop\\dji\\DJI_0005Take2.MP4");
@@ -229,15 +229,15 @@ int main(int argc, char** argv) {
 		  image.copyTo(origFrame);// for final output
 		 framepos=(int)cap.get(CV_CAP_PROP_POS_FRAMES);
 		  //road detection
-		if (framepos == 1 || framepos % 1000 == 0)
+		if (framepos == 1 || framepos % 300 == 0)
 		{
-			/*labRoadImage=roadDetectionPreprocessing (image,0);
+			labRoadImage=roadDetectionPreprocessing (image,0);
 			HroadBorder = roadDetectionHorizontal(labRoadImage);
 			HroadTopX = HroadBorder.tl().x;
 			HroadTopY = HroadBorder.tl().y;
 			HroadBotX = HroadBorder.br().x;
 			HroadBotY = HroadBorder.br().y;
-			HROAD = Rect(HroadTopX, HroadTopY, (HroadBotX - HroadTopX), (HroadBotY - HroadTopY));//horizontal road dimensions*/
+			HROAD = Rect(HroadTopX, HroadTopY, (HroadBotX - HroadTopX), (HroadBotY - HroadTopY));//horizontal road dimensions
 
 			if(intersection == 1)
 			{ 
@@ -247,7 +247,7 @@ int main(int argc, char** argv) {
 				VroadTopY = VroadBorder.tl().y;
 				VroadBotX = VroadBorder.br().x;
 				VroadBotY = VroadBorder.br().y;
-				VROAD = Rect(VroadTopX, VroadTopY, (VroadBotX - VroadTopX), (VroadBotY - VroadTopY));//vertical road dimensions*/
+				VROAD = Rect(VroadTopX, VroadTopY, (VroadBotX - VroadTopX), (VroadBotY - VroadTopY));//vertical road dimensions
 				
 			}
 
@@ -266,7 +266,7 @@ int main(int argc, char** argv) {
 		
 		imshow("road Image", image);
 		//oVideoWriter.write(image);
-		//cout << "Frame: " << framepos << "/" << totalframes << endl;
+		cout << "Frame: " << framepos << "/" << totalframes << endl;
 		//line(image, HhalfFirstpoint, HhalfSecondPoint, Scalar(255, 0, 0), 1, 8, 0);
 		//image.copyTo(curFrame);
 		//cvtColor( curFrame, curFrame, COLOR_BGR2GRAY);
@@ -358,21 +358,17 @@ Mat labThresholdingStraight(Mat labRoadImage)
 	{
 		for (y = 0; y<labRoadImage.size().height; y++)
 		{
-			if ((labRoadImage.at<Vec3b>(y, x)[1]>=125) && (labRoadImage.at<Vec3b>(y, x)[1]<=131))  // these threshold values must be tuned or determined automatically!
-			{
-					if ((labRoadImage.at<Vec3b>(y, x)[2]>=118) && (labRoadImage.at<Vec3b>(y, x)[2]<=128)) //these threshold values must be tuned or determined automatically!
-					
-					{
+				if ((labRoadImage.at<Vec3b>(y, x)[1]>125) && (labRoadImage.at<Vec3b>(y, x)[1]<131))  // these threshold values must be tuned or determined automatically!
+				{
+					if ((labRoadImage.at<Vec3b>(y, x)[2]>120) && (labRoadImage.at<Vec3b>(y, x)[2]<128)) //these threshold values must be tuned or determined automatically!
 						//changing the pixel intensity to white
 						im.at<uchar>(y, x) = 255;
-					}
-					if ((labRoadImage.at<Vec3b>(y, x)[2]>133) && (labRoadImage.at<Vec3b>(y, x)[2]<140))
-					{
+					if ((labRoadImage.at<Vec3b>(y, x)[2]>133) && (labRoadImage.at<Vec3b>(y, x)[2]<140)) //these threshold values must be tuned or determined automatically!
 						//changing the pixel intensity to white
 						im.at<uchar>(y, x) = 255;
-					}
-			}
+				}
 		}
+
 
 	}
 	return im;
@@ -385,6 +381,8 @@ Mat roadDetectionPreprocessing (Mat roadImage, int orientation)
 	Mat roadImageBlur;
 	GaussianBlur(roadImage, roadImageBlur, Size(21, 21), 0, 0, BORDER_DEFAULT);
 	cvtColor(roadImageBlur, labRoadImage, COLOR_BGR2Lab);
+	Mat Lab[3];
+
 
 	int imageCenter;
 	
@@ -582,7 +580,7 @@ Rect roadDetectionHorizontal(Mat labRoadImage)
 		//printf("y:%d, percentage: %f\n",y,percentage);
 		//fprintf(f, " %d, %f\n", y, percentage);
 
-		if (percentage >= 0.55)
+		if (percentage >= 0.50)
 		{
 			arrayPercentH[y] = 255;
 		}
@@ -685,7 +683,7 @@ Rect roadDetectionVertical(Mat labRoadImage)
 		}
 		percentage = (float)counter / im.size().height;
 
-		if (percentage >= 0.55)
+		if (percentage >= 0.50)
 		{
 			arrayPercentV[x] = 255;
 		}
@@ -706,9 +704,9 @@ Rect roadDetectionVertical(Mat labRoadImage)
 	/***for vertical**/
 
 
-	//imshow("bin before adding white",im);
+	imshow("bin reaches percentage",im);
 	addCenterLinesVeritcal(im);
-	imshow("bin after adding white",im);
+	//imshow("bin after adding white",im);
 	int dilate_size = 2;
 	Mat dilateElement = getStructuringElement( MORPH_RECT, Size( 2*dilate_size + 1, 2*dilate_size+1 ), Point( dilate_size, dilate_size ) );
 	for (int i = 0; i<4; i++)
@@ -731,7 +729,10 @@ Rect roadDetectionVertical(Mat labRoadImage)
 			largest_contour_index = i;                //Store the index of largest contour
 			bounding_rect = boundingRect(contours[i]); // Find the bounding rectangle for biggest contour
 		}
+		 drawContours( im, contours,largest_contour_index, Scalar(255, 255, 255), CV_FILLED);	
 	}
+	
+	 imshow("largest area found vertical",im);
 	return bounding_rect;
 }
 
